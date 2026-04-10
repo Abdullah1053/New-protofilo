@@ -1,3 +1,4 @@
+import { GitHubCalendar } from "react-github-calendar";
 import { motion } from "framer-motion";
 import { 
   Github, 
@@ -8,7 +9,8 @@ import {
   Smartphone, 
   Terminal,
   Database,
-  Phone
+  Phone,
+  Activity
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -185,6 +187,42 @@ export default function App() {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* GitHub Contributions Section */}
+      <section className="py-24 px-6 border-t border-white/5 bg-white/[0.01]">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-4 mb-12">
+            <div className="w-12 h-12 bg-orange-500/10 rounded-2xl flex items-center justify-center text-orange-500">
+              <Activity className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-sm font-mono text-orange-500 tracking-[0.3em] uppercase mb-1">Open Source</h2>
+              <h3 className="text-3xl font-bold tracking-tight">GitHub Contributions</h3>
+            </div>
+          </div>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="p-8 bg-black border border-white/10 rounded-3xl overflow-hidden flex justify-center"
+          >
+            <div className="w-full overflow-x-auto flex justify-center py-4">
+              <GitHubCalendar 
+                username="Abdullah1053" 
+                colorScheme="dark"
+                theme={{
+                  light: ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'],
+                  dark: ['#161b22', '#451a03', '#9a3412', '#ea580c', '#f97316'],
+                }}
+                fontSize={12}
+                blockSize={12}
+                blockMargin={4}
+              />
+            </div>
+          </motion.div>
         </div>
       </section>
 
