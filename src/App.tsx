@@ -23,25 +23,25 @@ const projects = [
     type: "Full Stack"
   },
   {
-    title: "Store App",
-    description: "Mobile application for item deployment and service management with secure authentication and password recovery.",
-    tech: ["Flutter", "Dart", "Firebase"],
-    link: "https://github.com/Abdullah1053/udemy_course",
-    type: "Mobile"
+    title: "E-Commerce Platform (Doing)",
+    description: "Built and optimized a scalable e-commerce system with payment integration and efficient order management.",
+    tech: ["TypeScript", "Node.js", "PostgreSQL"],
+    link: "https://github.com/Abdullah1053",
+    type: "Full Stack"
   },
   {
-    title: "Weather Application",
-    description: "Real-time weather tracking application providing detailed meteorological data for any city worldwide.",
-    tech: ["Flutter", "Dart", "OpenWeather API"],
-    link: "https://github.com/Abdullah1053/weather_finder_app",
-    type: "Mobile"
+    title: "On-Demand Delivery Platform (Yalla Fast)",
+    description: "Developed a full delivery ecosystem with real-time order tracking, admin panel, and mobile apps.",
+    tech: ["Laravel", "MySQL", "Flutter"],
+    link: "https://github.com/Abdullah1053",
+    type: "Full Stack / Mobile"
   },
   {
-    title: "Todo Application",
-    description: "Task management system with archiving features and status tracking for optimized productivity.",
-    tech: ["Flutter", "Dart"],
-    link: "https://github.com/Abdullah1053/to_do_list_app",
-    type: "Mobile"
+    title: "Webhook-Based Delivery Integration Platform",
+    description: "Created a scalable webhook system enabling third-party delivery service integrations with onboarding and approval workflows.",
+    tech: ["Laravel", "Vue.js", "MySQL"],
+    link: "https://github.com/Abdullah1053",
+    type: "Backend / Integration"
   }
 ];
 
@@ -49,12 +49,12 @@ const skillCategories = [
   {
     name: "Frontend",
     icon: <Globe className="w-5 h-5" />,
-    skills: ["Vue.js", "React", "JavaScript", "HTML5", "CSS3", "Bootstrap", "Tailwind CSS"]
+    skills: ["Blade", "Next.js", "Vue.js", "Tailwind CSS"]
   },
   {
     name: "Backend",
     icon: <Terminal className="w-5 h-5" />,
-    skills: ["Laravel", "PHP", "Java", "Dart", "Node.js"]
+    skills: ["Laravel", "Webhook", "WebSocket", "Trigger.dev", "Node.js", "Bun", "Docker"]
   },
   {
     name: "Mobile",
@@ -62,9 +62,9 @@ const skillCategories = [
     skills: ["Flutter", "Dart"]
   },
   {
-    name: "Database & DevOps",
+    name: "DB & DevOps",
     icon: <Database className="w-5 h-5" />,
-    skills: ["MySQL", "Firebase", "Heroku", "Git", "GitHub"]
+    skills: ["MySQL", "PostgreSQL", "Firebase", "PgBouncer", "Coolify", "Nginx", "Caddy Proxy"]
   }
 ];
 
