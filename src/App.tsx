@@ -1,5 +1,5 @@
 import { GitHubCalendar } from "react-github-calendar";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Github, 
   Linkedin, 
@@ -10,7 +10,10 @@ import {
   Terminal,
   Database,
   Phone,
-  Activity
+  Activity,
+  ChevronDown,
+  ChevronUp,
+  CheckCircle2
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -18,6 +21,13 @@ const projects = [
   {
     title: "Tammer Yemni Company",
     description: "Full-stack construction and contracting services platform. Facilitates service requests and implementation tracking.",
+    fullDescription: "A comprehensive platform designed for Tammer Yemni Company to manage construction and contracting services. It streamlines the process from initial service requests to final implementation tracking, ensuring transparency and efficiency.",
+    features: [
+      "Real-time service request tracking",
+      "Admin dashboard for project management",
+      "Client portal for status updates",
+      "Automated reporting and analytics"
+    ],
     tech: ["Laravel", "Vue.js", "MySQL", "Bootstrap"],
     link: "https://handyman.alarabia-architecture.com/",
     type: "Full Stack"
@@ -25,6 +35,13 @@ const projects = [
   {
     title: "E-Commerce Platform (Doing)",
     description: "Built and optimized a scalable e-commerce system with payment integration and efficient order management.",
+    fullDescription: "A modern, scalable e-commerce solution currently under development. It focuses on high performance, secure payment processing, and a seamless user experience for both customers and administrators.",
+    features: [
+      "Secure Stripe/PayPal integration",
+      "Dynamic product catalog and search",
+      "Inventory management system",
+      "Responsive user interface"
+    ],
     tech: ["TypeScript", "Node.js", "PostgreSQL"],
     link: "https://github.com/Abdullah1053",
     type: "Full Stack"
@@ -32,6 +49,13 @@ const projects = [
   {
     title: "On-Demand Delivery Platform (Yalla Fast)",
     description: "Developed a full delivery ecosystem with real-time order tracking, admin panel, and mobile apps.",
+    fullDescription: "Yalla Fast is a complete on-demand delivery ecosystem. It includes mobile applications for customers and drivers, a powerful admin panel for dispatching, and real-time GPS tracking for all orders.",
+    features: [
+      "Real-time GPS order tracking",
+      "Driver and customer mobile apps",
+      "Automated dispatching algorithm",
+      "Comprehensive admin analytics"
+    ],
     tech: ["Laravel", "MySQL", "Flutter"],
     link: "https://github.com/Abdullah1053",
     type: "Full Stack / Mobile"
@@ -39,6 +63,13 @@ const projects = [
   {
     title: "Webhook-Based Delivery Integration Platform",
     description: "Created a scalable webhook system enabling third-party delivery service integrations with onboarding and approval workflows.",
+    fullDescription: "A specialized platform designed to bridge third-party delivery services with internal systems via webhooks. It features a robust onboarding process and approval workflows to ensure secure and reliable data exchange.",
+    features: [
+      "Scalable webhook architecture",
+      "Service provider onboarding portal",
+      "Approval and validation workflows",
+      "Detailed delivery log monitoring"
+    ],
     tech: ["Laravel", "Vue.js", "MySQL"],
     link: "https://github.com/Abdullah1053",
     type: "Backend / Integration"
@@ -68,6 +99,92 @@ const skillCategories = [
   }
 ];
 
+interface ProjectCardProps {
+  project: {
+    title: string;
+    description: string;
+    fullDescription: string;
+    features: string[];
+    tech: string[];
+    link: string;
+    type: string;
+  };
+  i: number;
+  key?: any;
+}
+
+const ProjectCard = ({ project, i }: ProjectCardProps) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: i * 0.1 }}
+      className="group relative bg-white/5 border border-white/10 rounded-3xl overflow-hidden hover:border-white/20 transition-all flex flex-col"
+    >
+      <div className="p-8 md:p-12 flex-grow">
+        <div className="flex justify-between items-start mb-6">
+          <span className="px-3 py-1 bg-white/10 rounded-full text-[10px] uppercase tracking-widest font-bold text-white/60">
+            {project.type}
+          </span>
+          <a href={project.link} target="_blank" className="p-3 bg-white text-black rounded-full opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all">
+            <ExternalLink className="w-5 h-5" />
+          </a>
+        </div>
+        <h4 className="text-3xl font-bold mb-4">{project.title}</h4>
+        
+        <div className="relative">
+          <p className={`text-white/60 mb-6 transition-all duration-300 ${isExpanded ? "" : "line-clamp-2"}`}>
+            {isExpanded ? project.fullDescription : project.description}
+          </p>
+          
+          <AnimatePresence>
+            {isExpanded && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="mb-8">
+                  <h5 className="text-sm font-bold text-orange-500 uppercase tracking-widest mb-4">Key Features</h5>
+                  <ul className="space-y-3">
+                    {project.features.map((feature: string, idx: number) => (
+                      <li key={idx} className="flex items-start gap-3 text-sm text-white/60">
+                        <CheckCircle2 className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <div className="flex flex-wrap gap-3 mb-8">
+          {project.tech.map((t: string) => (
+            <span key={t} className="text-xs font-mono text-white/40">{t}</span>
+          ))}
+        </div>
+      </div>
+
+      <button 
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full py-4 bg-white/5 border-t border-white/10 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest hover:bg-white/10 transition-colors"
+      >
+        {isExpanded ? (
+          <>Show Less <ChevronUp className="w-4 h-4" /></>
+        ) : (
+          <>Read More <ChevronDown className="w-4 h-4" /></>
+        )}
+      </button>
+    </motion.div>
+  );
+};
+
 export default function App() {
   const [scrolled, setScrolled] = useState(false);
 
@@ -90,7 +207,7 @@ export default function App() {
             ABDULLAH<span className="text-orange-500">.</span>
           </motion.div>
           <div className="hidden md:flex gap-8 text-sm font-medium uppercase tracking-widest text-white/60">
-            {["About", "Skills", "Projects", "Contact"].map((item) => (
+            {["About", "Projects", "Skills", "Contact"].map((item) => (
               <a key={item} href={`#${item.toLowerCase()}`} className="hover:text-white transition-colors">
                 {item}
               </a>
@@ -226,41 +343,6 @@ export default function App() {
         </div>
       </section>
 
-      {/* Skills Section */}
-      <section id="skills" className="py-32 px-6 bg-white/[0.02]">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-16">
-            <h2 className="text-sm font-mono text-orange-500 tracking-[0.3em] uppercase mb-4">Expertise</h2>
-            <h3 className="text-5xl font-bold tracking-tight">Technical Arsenal</h3>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {skillCategories.map((cat, i) => (
-              <motion.div
-                key={cat.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="p-8 bg-black border border-white/10 rounded-3xl hover:border-orange-500/50 transition-colors group"
-              >
-                <div className="w-12 h-12 bg-orange-500/10 rounded-2xl flex items-center justify-center text-orange-500 mb-6 group-hover:scale-110 transition-transform">
-                  {cat.icon}
-                </div>
-                <h4 className="text-xl font-bold mb-6">{cat.name}</h4>
-                <div className="flex flex-wrap gap-2">
-                  {cat.skills.map(skill => (
-                    <span key={skill} className="px-3 py-1 bg-white/5 rounded-full text-xs text-white/60 border border-white/5">
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Projects Section */}
       <section id="projects" className="py-32 px-6">
         <div className="max-w-7xl mx-auto">
@@ -276,32 +358,55 @@ export default function App() {
 
           <div className="grid md:grid-cols-2 gap-8">
             {projects.map((project, i) => (
+              <ProjectCard key={project.title} project={project} i={i} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Skills Section */}
+      <section id="skills" className="py-32 px-6 bg-white/[0.02]">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-16">
+            <h2 className="text-sm font-mono text-orange-500 tracking-[0.3em] uppercase mb-4">Expertise</h2>
+            <h3 className="text-5xl font-bold tracking-tight">Technical Arsenal</h3>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {skillCategories.map((cat, i) => (
               <motion.div
-                key={project.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="group relative bg-white/5 border border-white/10 rounded-3xl overflow-hidden hover:border-white/20 transition-all"
+                key={cat.name}
+                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                whileHover={{ y: -10, transition: { duration: 0.2 } }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ 
+                  duration: 0.5, 
+                  delay: i * 0.1,
+                  ease: [0.215, 0.61, 0.355, 1]
+                }}
+                className="p-8 bg-black border border-white/10 rounded-3xl hover:border-orange-500/50 transition-colors group relative overflow-hidden"
               >
-                <div className="p-8 md:p-12">
-                  <div className="flex justify-between items-start mb-6">
-                    <span className="px-3 py-1 bg-white/10 rounded-full text-[10px] uppercase tracking-widest font-bold text-white/60">
-                      {project.type}
-                    </span>
-                    <a href={project.link} target="_blank" className="p-3 bg-white text-black rounded-full opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all">
-                      <ExternalLink className="w-5 h-5" />
-                    </a>
-                  </div>
-                  <h4 className="text-3xl font-bold mb-4">{project.title}</h4>
-                  <p className="text-white/60 mb-8 line-clamp-2">
-                    {project.description}
-                  </p>
-                  <div className="flex flex-wrap gap-3">
-                    {project.tech.map(t => (
-                      <span key={t} className="text-xs font-mono text-white/40">{t}</span>
-                    ))}
-                  </div>
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-orange-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                
+                <div className="w-12 h-12 bg-orange-500/10 rounded-2xl flex items-center justify-center text-orange-500 mb-6 group-hover:scale-110 group-hover:bg-orange-500 group-hover:text-black transition-all duration-300">
+                  {cat.icon}
+                </div>
+                <h4 className="text-xl font-bold mb-6 group-hover:text-orange-500 transition-colors">{cat.name}</h4>
+                <div className="flex flex-wrap gap-2">
+                  {cat.skills.map((skill, j) => (
+                    <motion.span 
+                      key={skill}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: (i * 0.1) + (j * 0.05) + 0.3 }}
+                      whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+                      className="px-3 py-1 bg-white/5 rounded-full text-xs text-white/60 border border-white/5 cursor-default"
+                    >
+                      {skill}
+                    </motion.span>
+                  ))}
                 </div>
               </motion.div>
             ))}
