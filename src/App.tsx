@@ -420,7 +420,7 @@ export default function App() {
             <div className="text-sm font-bold tracking-tighter">ABDULLAH ADEMI © 2026</div>
             <div className="flex gap-8">
               <a href="https://github.com/Abdullah1053" target="_blank" className="hover:opacity-60 transition-opacity"><Github className="w-6 h-6" /></a>
-              <a href="#" className="hover:opacity-60 transition-opacity"><Linkedin className="w-6 h-6" /></a>
+              <a href="https://linkedin.com/in/abdullah-ademi-788767257" target="_blank" className="hover:opacity-60 transition-opacity"><Linkedin className="w-6 h-6" /></a>
             </div>
           </div>
         </div>
