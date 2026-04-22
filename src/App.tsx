@@ -19,56 +19,42 @@ import { useState, useEffect } from "react";
 
 const projects = [
   {
-    title: "Tammer Yemni Company",
-    description: "Full-stack construction and contracting services platform. Facilitates service requests and implementation tracking.",
-    fullDescription: "A comprehensive platform designed for Tammer Yemni Company to manage construction and contracting services. It streamlines the process from initial service requests to final implementation tracking, ensuring transparency and efficiency.",
-    features: [
-      "Real-time service request tracking",
-      "Admin dashboard for project management",
-      "Client portal for status updates",
-      "Automated reporting and analytics"
-    ],
-    tech: ["Laravel", "Vue.js", "MySQL", "Bootstrap"],
-    link: "https://handyman.alarabia-architecture.com/",
-    type: "Full Stack"
-  },
-  {
     title: "E-Commerce Platform (Doing)",
-    description: "Built and optimized a scalable e-commerce system with payment integration and efficient order management.",
-    fullDescription: "A modern, scalable e-commerce solution currently under development. It focuses on high performance, secure payment processing, and a seamless user experience for both customers and administrators.",
+    description: "Contributed to the development of a scalable e-commerce platform with optimized performance.",
+    fullDescription: "Contributed to the development of a scalable e-commerce platform. Developed dynamic frontend components and built and maintained backend features. Integrated payment systems and order management workflows. Optimized database queries and improved overall system performance.",
     features: [
-      "Secure Stripe/PayPal integration",
-      "Dynamic product catalog and search",
-      "Inventory management system",
-      "Responsive user interface"
+      "Dynamic frontend component development",
+      "Backend feature maintenance & scaling",
+      "Payment system & order workflow integration",
+      "Database query & performance optimization"
     ],
-    tech: ["TypeScript", "Node.js", "PostgreSQL"],
+    tech: ["Laravel", "Vue.js", "PostgreSQL", "MySQL"],
     link: "https://github.com/Abdullah1053",
     type: "Full Stack"
   },
   {
-    title: "On-Demand Delivery Platform (Yalla Fast)",
-    description: "Developed a full delivery ecosystem with real-time order tracking, admin panel, and mobile apps.",
-    fullDescription: "Yalla Fast is a complete on-demand delivery ecosystem. It includes mobile applications for customers and drivers, a powerful admin panel for dispatching, and real-time GPS tracking for all orders.",
+    title: "On-Demand Delivery Platform",
+    description: "Scaled delivery architecture with real-time tracking and AI-ready automation workflows.",
+    fullDescription: "Designed and developed a scalable delivery platform architecture including admin dashboards and mobile apps, supporting real-time order tracking and system integrations. Designed systems that can be extended to support AI-driven decision-making and automation workflows.",
     features: [
-      "Real-time GPS order tracking",
-      "Driver and customer mobile apps",
-      "Automated dispatching algorithm",
-      "Comprehensive admin analytics"
+      "Real-time order tracking & dashboards",
+      "Mobile app development (Customer/Driver)",
+      "AI-driven decision-making integration",
+      "Automation workflow design"
     ],
     tech: ["Laravel", "MySQL", "Flutter"],
     link: "https://github.com/Abdullah1053",
     type: "Full Stack / Mobile"
   },
   {
-    title: "Webhook-Based Delivery Integration Platform",
-    description: "Created a scalable webhook system enabling third-party delivery service integrations with onboarding and approval workflows.",
-    fullDescription: "A specialized platform designed to bridge third-party delivery services with internal systems via webhooks. It features a robust onboarding process and approval workflows to ensure secure and reliable data exchange.",
+    title: "Webhook-Based Integration Platform",
+    description: "Orchestrated third-party delivery integrations via secure and scalable webhook architectures.",
+    fullDescription: "Designed and developed a platform enabling third-party delivery services to integrate via webhooks. Built a full onboarding system for delivery providers (registration, API setup, and configuration). Implemented a review and approval workflow to validate integrations before publishing. Developed secure and scalable webhook handling for order dispatching and status updates.",
     features: [
-      "Scalable webhook architecture",
-      "Service provider onboarding portal",
-      "Approval and validation workflows",
-      "Detailed delivery log monitoring"
+      "Third-party webhook architecture",
+      "Provider onboarding & API setup system",
+      "Review & approval validation workflows",
+      "Scalable order dispatching & updates"
     ],
     tech: ["Laravel", "Vue.js", "MySQL"],
     link: "https://github.com/Abdullah1053",
@@ -80,22 +66,22 @@ const skillCategories = [
   {
     name: "Frontend",
     icon: <Globe className="w-5 h-5" />,
-    skills: ["Blade", "Next.js", "Vue.js", "Tailwind CSS"]
+    skills: ["Blade", "Next.js", "Vue.js", "Tailwind CSS", "Responsive UI"]
   },
   {
     name: "Backend",
     icon: <Terminal className="w-5 h-5" />,
-    skills: ["Laravel", "Webhook", "WebSocket", "Trigger.dev", "Node.js", "Bun", "Docker"]
+    skills: ["Laravel", "Node.js", "RESTful APIs", "Webhook Architectures", "Real-time Systems"]
   },
   {
-    name: "Mobile",
+    name: "Mobile & AI",
     icon: <Smartphone className="w-5 h-5" />,
-    skills: ["Flutter", "Dart"]
+    skills: ["Flutter", "Dart", "AI/ML Integration", "Model Deployment", "Data-driven Apps"]
   },
   {
     name: "DB & DevOps",
     icon: <Database className="w-5 h-5" />,
-    skills: ["MySQL", "PostgreSQL", "Firebase", "PgBouncer", "Coolify", "Nginx", "Caddy Proxy"]
+    skills: ["PostgreSQL", "MySQL", "Nginx/Caddy", "PM2/Docker", "CI/CD Pipelines", "Linux Servers"]
   }
 ];
 
@@ -216,7 +202,7 @@ export default function App() {
           <motion.a 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            href="https://drive.google.com/file/d/1CpbYtIUjg2A87HyPUIK5dcaB4Q6BXY8_/view?usp=drivesdk"
+            href="https://drive.google.com/file/d/1XnoBuRhbLahyD9ICzNYvONwJczwJ4UYB/view?usp=drivesdk"
             target="_blank"
             className="px-5 py-2 border border-white/20 rounded-full text-xs font-semibold uppercase tracking-widest hover:bg-white hover:text-black transition-all"
           >
@@ -244,7 +230,7 @@ export default function App() {
               <span className="text-white/40">ADEMI</span>
             </h1>
             <p className="max-w-xl text-lg text-white/60 leading-relaxed mb-10">
-              Experienced Full-Stack Developer and Project Manager specializing in building high-performance web and mobile applications with Laravel, Vue.js, and Flutter.
+              Full-Stack Software Engineer with experience building scalable web applications, APIs, and real-time systems using Laravel, Vue.js, and modern web technologies. Expert in designing production-ready architectures and automation workflows.
             </p>
             <div className="flex flex-wrap gap-4">
               <a href="#projects" className="px-8 py-4 bg-white text-black font-bold rounded-full hover:bg-orange-500 transition-colors">
@@ -278,10 +264,10 @@ export default function App() {
           >
             <h3 className="text-3xl font-bold mb-6 tracking-tight">Crafting digital experiences with precision.</h3>
             <p className="text-white/60 leading-relaxed mb-6">
-              With a strong background in managing team workflows and optimizing web applications, I focus on delivering scalable solutions that solve real-world problems.
+              Full-Stack Software Engineer with expertise in designing production-ready architectures, managing deployments, and collaborating across teams to deliver reliable, high-performance systems.
             </p>
             <p className="text-white/60 leading-relaxed">
-              My expertise spans across the entire development lifecycle, from initial architecture and database design to frontend implementation and cloud deployment.
+              Strong focus on AI-driven systems and backend infrastructure, with extensive experience integrating external services, automation workflows, and scalable data-driven applications.
             </p>
           </motion.div>
           <div className="grid grid-cols-2 gap-4">
