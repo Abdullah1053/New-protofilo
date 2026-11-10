@@ -1,0 +1,1012 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+memory/
+  01-build-playbook.md
+  02-scroll-film-canvas.md
+  03-seamless-transitions.md
+  04-cinematic-hero.md
+  05-theming.md
+  06-higgsfield-pipeline.md
+  07-modesty-and-identity.md
+  08-preview-and-env-gotchas.md
+  09-quality-bar.md
+templates/
+  HIGGSFIELD-PROMPTS.template.md
+  index.skeleton.html
+  launch.json
+CLAUDE.md
+README.md
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="memory/01-build-playbook.md">
+# 01 · Cinematic Landing-Page Build Playbook
+
+The proven structure + motion stack for a single-file, scroll-driven **cinematic** product landing page that feels like a luxury TV ad (Apple × Cartier / Hermès), not a website. Product-agnostic: works for any product or topic.
+
+## Stack (single HTML file)
+- **Tailwind (CDN)** for utility sprinkles + **custom CSS** in `<style>` for the real styling.
+- **GSAP + ScrollTrigger** (animation + scroll triggers).
+- **Lenis** (smooth scroll), driven by **GSAP's ticker** (one shared rAF clock — never two rAF loops):
+  ```js
+  lenis.on('scroll', ScrollTrigger.update);
+  gsap.ticker.add(t => lenis.raf(t * 1000));
+  gsap.ticker.lagSmoothing(0);
+  window.lenis = lenis; // expose for verification
+  ```
+- Fonts: pick **clean modern** faces with high contrast. For Arabic use **El Messiri** (headings) + **Tajawal** (body) — NOT Amiri (too calligraphic). Latin accents: Cormorant Garamond.
+
+## Page structure (top → bottom) that works
+1. **HERO** — start DIRECTLY on the product, no empty splash. Must be *cinematic*, not a static image + fade. See [04-cinematic-hero](04-cinematic-hero.md).
+2. **THE FILM** — a tall section (~600vh) with an inner `position:sticky; top:0; height:100svh` stage; scroll drives a continuous product transformation rendered as a **canvas frame-sequence**. See [02-scroll-film-canvas](02-scroll-film-canvas.md).
+3. **PRODUCT REVEAL** — the hero product shot + specs + subtle parallax accents (editorial layout).
+4. **RITUAL / MOMENTS** — a lifestyle / use-moment beat (people optional; see [07-modesty-and-identity](07-modesty-and-identity.md)).
+5. **CTA** — a pinned section: product video plays **alone first**, then on scroll a dim/wash layer + order content fade in over it (build contrast before the ask).
+6. **VARIANTS / EDITIONS** (optional) — re-skinned product cards.
+7. Footer.
+
+> Sections should be visually distinct but **connected** — transitions via a smoothly-tweened ambient background, never hard cuts.
+
+## Fixed cinematic layers (z-stacked behind content)
+- `#ambient` — full-screen background color, **tweened per section** (mood shifts). Animate the real `background-color` with GSAP (color interpolation), triggered on each section's `onEnter`/`onEnterBack`.
+- `#glow` — soft radial light; opacity shifts per section.
+- `#vignette` — subtle edge darkening to focus the center.
+- `#grain` — faint film grain (SVG fractal-noise data-URI), `mix-blend-mode` + low opacity.
+- `#progress` — thin gold scroll-progress bar at the very top.
+
+## Header
+Beautiful, contains the product emblem + wordmark. **Hide on scroll-down, return on scroll-up** (never remove it entirely):
+```js
+ScrollTrigger.create({ start:0, end:'max', onUpdate:self=>{
+  progress.style.transform = 'scaleX(' + self.progress + ')';
+  header.classList.toggle('solid', self.scroll() > 40);
+  if (self.scroll() > 140) header.classList.toggle('hidden', self.direction === 1);
+  else header.classList.remove('hidden');
+}});
+```
+
+## Polish details that land
+Film grain, thin gold progress bar, gold gradient text (`background-clip:text`), ambient color that shifts per section, soft radial glow behind the floating product, editorial section indices (٠١، ٠٢…), generous negative space.
+
+## CTA reveal (smoothstep gate)
+Tall pinned section; a scrubbed ScrollTrigger drives a `smoothstep`-gated reveal: video-only for the first ~third, then a dim/wash layer + content fade in. Cycle multiple short clips as a JS playlist (advance on `ended`/`error`).
+
+## Non-negotiables
+- All motion is **scroll-triggered**, slow, contemplative. Continuous ambient motion is OK only when it adds life (hero aura/float), never busy.
+- Respect `prefers-reduced-motion` (+ IntersectionObserver fallback) and **graceful asset fallbacks** (a 404 must reveal a tasteful gradient, never a broken box).
+- See [09-quality-bar](09-quality-bar.md) for the taste bar and the exact pitfalls to avoid.
+</file>
+
+<file path="memory/02-scroll-film-canvas.md">
+# 02 · The Scroll "Film" = a Canvas Frame-Sequence
+
+The single most important technique. The hero transformation must read as one continuous, butter-smooth film tied to scroll.
+
+## The rule
+**NEVER scrub a `<video>` with `video.currentTime = progress * duration`.** H.264 must decode from the nearest keyframe on every seek → stutter and dropped frames. This is the #1 thing that makes a "cinematic" page feel cheap. It will be rejected.
+
+## The fix (Apple-style)
+Convert the video(s) into a **numbered JPG frame sequence** and draw the current frame onto a `<canvas>` based on scroll progress. Pre-decoded image swaps = zero seek lag.
+
+## Recipe
+1. **Extract frames** from the source clip(s) — sample ~24–30 frames/clip, resize to ~1280px wide, JPEG q≈80. Concatenate clips into one continuous `f000.jpg … fNNN.jpg`. ~90–120 frames ≈ 5–8 MB total → preloads fine. (No ffmpeg needed; use Python + OpenCV — see [06-higgsfield-pipeline](06-higgsfield-pipeline.md).)
+2. **Preload** all frames into `Image[]`; show a % preloader; promote to "ready" at ~60% loaded OR all-settled, with a **safety timeout** (~9s) so a stalled frame can't hang the page. If 0 load → show a static fallback still.
+3. **Scrub** with one ScrollTrigger:
+   ```js
+   const filmST = ScrollTrigger.create({
+     trigger:'#film', start:'top top', end:'bottom bottom', scrub:true,
+     onUpdate: s => { if (ready) draw(Math.round(s.progress * (N - 1))); /* + drive captions */ }
+   });
+   ```
+4. **`draw(i)`** uses object-cover math; cache `cur` to skip redundant draws; set `canvas.width/height = clientW/H * min(2, dpr)` and **redraw on resize**. Fill the canvas with the **edge/background color of the frames** first (so full-bleed edges never show a seam).
+5. **On becoming-ready, draw the frame for the CURRENT scroll position** (`filmST.progress`), not frame 0 — otherwise frames that finish loading mid-section paint a wrong still until the next scroll.
+
+## Captions over the film
+Small, high-contrast, **off-center** (right side in RTL). Drive their opacity from the same scrub `onUpdate` using a `smoothstep` window per caption (`data-a`/`data-b` progress range). Don't center text over the subject (except the opening title).
+
+## Why full-bleed canvas also fixes "cropped/seam" complaints
+A full-bleed canvas on a stage whose background matches the frames' edge color → no visible image border, no letterboxing.
+
+Pairs with [03-seamless-transitions](03-seamless-transitions.md) (how to make the source clips continuous before extracting).
+</file>
+
+<file path="memory/03-seamless-transitions.md">
+# 03 · Seamless Transitions (no visible cut)
+
+Goal: a continuous visual journey with **no visible cut** between stages (e.g. raw material → product forms → packaging seals → final reveal). The eye never leaves the subject.
+
+## Rules
+1. **Never cross-dissolve two DIFFERENT still images** to fake a morph — it produces an ugly double-exposure "ghost". Any morph/transformation = a **real video** clip.
+2. **Boundary-matched clips:** generate each clip (image-to-video) with BOTH a `--start-image` and an `--end-image`. Make **clip N's end-image == clip N+1's start-image** (the SAME keyframe file). When the clips play/scrub back-to-back, the handoff frame is identical → invisible seam. When extracting the frame sequence, **drop the duplicated first frame of clips 2..N**.
+3. **Match edges + background across ALL keyframes.** Prompt every keyframe with the identical background spec and an explicit edge color (e.g. "seamless warm off-white #FBF8F2 fading to the same tone at every edge and corner", or for dark themes "deep near-black #0B0805 at every edge"). Mismatched edges = a visible band when stitched.
+4. **Bridge big composition jumps with an intermediate keyframe.** If two states are far apart (a full-screen object → a small one), insert a "gather"/transition keyframe and split into two clips rather than one hard morph.
+5. Keep camera/motion **slow and locked**; prompt "no cuts, no flicker, slow motion, no morphing artifacts". For clips with people add "no face distortion" and keep motion subtle.
+
+## Keyframe → clip pattern
+```
+K1 ──V1──▶ K2 ──V2──▶ K3 ──V3──▶ K4 ──V4──▶ K5
+(image)   (image)    (image)    (image)    (image)
+each Vn: --start-image K(n)  --end-image K(n+1)
+```
+Generate the keyframes first (image-to-image, identity-preserving), THEN the boundary-matched clips, THEN extract → one continuous frame sequence for [02-scroll-film-canvas](02-scroll-film-canvas.md).
+</file>
+
+<file path="memory/04-cinematic-hero.md">
+# 04 · The Cinematic Hero (the make-or-break first impression)
+
+The top of the page decides everything. **A static image + a fade-in is NOT acceptable** — it reads as "just another website" and will be rejected hard. The hero must feel alive and flow into the film below (one journey).
+
+## Use a transparent product cutout, not a blend trick
+Drop the product onto the page as a **background-removed transparent PNG** (Higgsfield `image_background_remover`) and composite it normally with a soft `drop-shadow`. Do NOT rely on `mix-blend-mode` for the hero — see the critical caveat in [05-theming](05-theming.md) (multiply/screen **break** on any element GSAP transforms → an ugly white/black box). A cutout is bulletproof on any background.
+
+## The recipe (layers + motion)
+Structure (nested wrappers so each owns ONE transform channel — no conflicts):
+```
+.stage (perspective)
+  .aura            → gold radial light: CSS entrance fade + slow pulse + pointer parallax
+  .motes           → ~8 drifting gold dust particles (CSS keyframes, varied delay/size)
+  .hero-inner
+    .latin / eyebrow
+    .media-float   → CSS float (translateY bob)
+      .media-tilt  → JS pointer-driven rotateX/rotateY (3D depth)
+        img.cutout → GSAP entrance (scale/rotate/opacity)
+        .specular  → moving light sheen, masked to the cutout silhouette:
+                     mask: url(cutout.png) center/contain no-repeat;
+    h1 (wordmark)  → GSAP clip-path reveal
+    .sub
+  .scrollcue
+```
+
+1. **Entrance timeline on load** (GSAP): cutout scales/rotates in, wordmark reveals via `clip-path: inset(...)`, eyebrow/sub/cue stagger in. ~1.5s, `power3.out`.
+2. **Continuous life:** aura opacity pulse, gold dust motes drifting upward, gentle float, a light **sheen sweeping across the product** (a moving gradient `mask`ed to the cutout PNG so it only shows on the product).
+3. **3D pointer parallax:** on `pointermove`, tilt the product (`rotateX/Y`) and drift the aura/motes the opposite way for depth. Reset on `pointerleave`.
+4. **Scroll handoff:** fade + lift the whole composition as you scroll, expanding the aura — flowing into the film.
+
+## Guards
+- `prefers-reduced-motion`: disable continuous loops + entrance; show the final visible state.
+- If GSAP fails to load (CDN blocked): elements that start at `opacity:0` for the entrance must be force-revealed in a `if(!hasGSAP)` fallback, or they stay invisible.
+- Keep the wordmark from overlapping the product (flex-stack, verify no overlap). Keep total hero content within the viewport so there's no awkward empty gap (a reduced hero height ~130vh, not 175vh).
+
+> The same energy applies to any "environmental" section (e.g. an origin/heritage beat): make it **full-bleed + pinned** with a slow Ken Burns push, a growing light glow, and a masked line-by-line text reveal — not a small framed image with a fade.
+</file>
+
+<file path="memory/05-theming.md">
+# 05 · Theming — Light vs Dark, and the Blend Trap
+
+The color world follows the PRODUCT and its source photography. Decide light vs dark from the reference assets, then keep one coherent system.
+
+## Decide the theme from the assets
+- **Dark luxury** (espresso/black grounds, dramatic raking light): the product pops via **`mix-blend-mode: screen`** dropping the BLACK background of dark-bg assets onto the dark page. Generate assets on a near-black seamless ground.
+- **Light gallery** (warm ivory/sand grounds, soft daylight, lots of negative space — Apple × Hermès × Aēsop): the product pops via **`mix-blend-mode: multiply`** dropping the WHITE background of white-bg assets into the paper. Generate assets on a seamless warm off-white ground (e.g. `#FBF8F2`).
+- If the reference product is photographed white-on-white (common for "art object" products), **light is usually the right call** and the real reference photos can be dropped straight onto the page via `multiply` — the page looks finished before you generate anything.
+
+## ⚠️ THE BLEND TRAP (cost real time — read this)
+**`mix-blend-mode` (multiply OR screen) BREAKS on any element that GSAP transforms.** A `transform` creates a new stacking context, so the element blends against white/black instead of the page → an ugly visible rectangle.
+- Symptom: a sharp light/dark rectangle around an image that should have vanished into the background. (Multiply can only darken / screen can only lighten — if you see a box the wrong direction, blending is OFF.)
+- It works on non-transformed product shots (e.g. a reveal image with no GSAP transform on the `<img>` itself) and fails on transformed ones (e.g. a hero image GSAP scales/parallaxes).
+- **Fix:** use a **background-removed transparent PNG** for anything you animate (especially the hero). Reserve `mix-blend-mode` for static, non-transformed product shots only.
+
+## Ambient mood per section
+Keep a fixed `#ambient` background-color layer and tween it on each section's `onEnter`/`onEnterBack` (GSAP color interpolation, ~1.1s).
+- **Light theme:** shifts are subtle WARMTH changes (ivory → sand → honey), reading like changing daylight — not light/dark swings. Text is dark ink everywhere → always legible.
+- **Dark theme:** shifts in darkness/warmth (espresso → warm brown → near-black). Watch text contrast during the tween; if a section flips to a light ground, give it its own opaque surface so dark text never sits on a dark tween mid-transition.
+- The CTA "dim" becomes a soft warm-white **wash** in light themes (not a black overlay).
+
+## Light-theme palette that worked (adapt the hues to your product)
+`--paper:#FBF8F2; --sand:#ECE2CF; --cream:#F3EEE2;` · text `--ink:#241812` (headings) / `#6E5C4B` (body) · gold must be DEEP to read on light: `#A97B33 → #8A6128` (pale gold disappears on white). Pull the product's own colors (e.g. caramel/mahogany) for accents.
+</file>
+
+<file path="memory/06-higgsfield-pipeline.md">
+# 06 · Higgsfield Asset Pipeline (the CLI playbook)
+
+How to generate every asset reliably via the `higgsfield` CLI (Higgsfield MCP / `higgsfield-generate` skill). Auth via `higgsfield auth login`; check with `higgsfield account status`.
+
+## Model picks
+- **`nano_banana_2`** (Nano Banana Pro) → reference-driven, **identity-preserving** product shots (logo / calligraphy / shape must stay identical). Pass the reference with `--image`. Params: `aspect_ratio` (1:1,3:2,2:3,4:3,3:4,4:5,5:4,9:16,16:9,21:9), `resolution` 1k/2k/4k. This is your workhorse for anything with the product in it. Also does re-skins (color/flavor variants) while keeping the same logo/text.
+- **`gpt_image_2`** → standalone scenes/environments with NO product identity to preserve (landscapes, backdrops). `quality high`, `resolution 2k`.
+- **`seedance_2_0`** → image-to-video. Flags: `--start-image`, `--end-image`, `--aspect_ratio` (16:9/9:16/4:3/3:4/1:1/21:9), `--resolution 1080p`, `--duration <int>`, `--bitrate_mode high`, **`--generate_audio false`** (underscore!). The flaky one — retry.
+- **`image_background_remover`** → transparent cutouts (for the hero / floating product). Just `--image`.
+
+## Submit pattern
+```bash
+higgsfield generate create <model> ... --wait --wait-timeout 25m --json > out.json
+```
+`--wait` blocks until done and the JSON contains the result. **The result is `result_url` (top-level).**
+
+## Parse the result WITHOUT jq (jq is usually NOT installed)
+The job JSON also lists the INPUT image URLs, so a naive "first URL" grab can return the input. **Extract `result_url` specifically:**
+```bash
+grep -oE '"result_url":[[:space:]]*"[^"]+"' out.json | grep -oE 'https://[^"]+' | head -1
+```
+Then download with a retry loop and verify the file exists & is non-empty:
+```bash
+for d in 1 2 3; do curl -fsSL "$URL" -o asset.jpg && [ -s asset.jpg ] && break; sleep 3; done
+```
+
+## Transient errors — RETRY, don't give up
+Intermittent `HTTP 502` and "Cannot reach …cloudfront…/<uuid>.png" (backend couldn't fetch the just-uploaded input) are flaky, not misuse — re-running succeeds. **Wrap every generation in a 3–4× retry loop.** The CLI exit code can be 0 even when the download branch failed → always verify the output file.
+
+## Reuse uploads
+Pre-upload references once: `higgsfield upload create ref.jpg --json` → capture `id`. Pass that UUID to `--image <id>` on every later call to skip re-upload and dodge the flaky re-fetch.
+
+## Run in parallel, in the background
+Image gens are reliable; Seedance video is the slow/flaky one. Fan out: launch all image gens with `&` + `wait` in one background script; do the boundary-matched videos in a second pass (they depend on the keyframes). Verify each output, then retry only the failures.
+
+## Frame extraction (Python + OpenCV — no ffmpeg)
+After the clips land, extract one continuous sequence (drop the shared duplicate first frame of clips 2..N):
+```python
+import cv2, os, glob
+clips = ["v1.mp4","v2.mp4","v3.mp4","v4.mp4"]; out="assets/seq"; os.makedirs(out, exist_ok=True)
+for f in glob.glob(out+"/f*.jpg"): os.remove(f)
+PER, W, idx = 24, 1280, 0
+for ci, p in enumerate(clips):
+    cap = cv2.VideoCapture(p); total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) or 0
+    if total <= 0: print("WARN empty", p); cap.release(); continue   # a failed download = 0-frame mp4
+    picks = [round(i*(total-1)/(PER-1)) for i in range(PER)]
+    if ci > 0: picks = picks[1:]                                     # drop the duplicate boundary frame
+    for fr_i in picks:
+        cap.set(cv2.CAP_PROP_POS_FRAMES, fr_i); ok, fr = cap.read()
+        if not ok: continue
+        h, w = fr.shape[:2]; fr = cv2.resize(fr, (W, round(h*W/w)))
+        cv2.imwrite(f"{out}/f{idx:03d}.jpg", fr, [cv2.IMWRITE_JPEG_QUALITY, 80]); idx += 1
+    cap.release()
+print("frames:", idx)   # set FRAME_COUNT in the HTML to this number
+```
+(4 clips × 24, dropping 3 duplicates = **93** frames. Keep the HTML's `FRAME_COUNT` in sync with the real count.)
+
+## Web-optimize before shipping
+Generated stills can be 6–10 MB. Downscale display images to ~2000–2600px JPEG q≈87 (cv2) so the page stays fast. Keep full-res keyframes only as video sources. Videos load lazily (CTA only), but consider their weight.
+
+See [03-seamless-transitions](03-seamless-transitions.md) for boundary-matching and [07-modesty-and-identity](07-modesty-and-identity.md) for the two hard prompt constraints.
+</file>
+
+<file path="memory/07-modesty-and-identity.md">
+# 07 · Two Hard Constraints for Generated Assets
+
+## 1. Modesty (for Arab / Muslim audiences) — mandatory
+Whenever people appear in/around the product (lifestyle, UGC, gatherings, iftar/Ramadan, hospitality), **any woman MUST be fully covered: an elegant hijab covering the hair, conservative long sleeves, tasteful and respectful — no skin beyond face and hands.** Put this explicitly in EVERY people prompt; non-modest output is an automatic reject.
+- Prompt snippet: *"an elegant woman wearing a MODEST hijab that fully covers her hair, with conservative long-sleeved clothing, tasteful and respectful — no skin beyond face and hands"*.
+- **Verify by reading the generated image before animating it.** Men / family / iftar / hospitality settings work well.
+
+## 2. Preserve exact product identity
+The product (logo, calligraphy/wordmark, shape, packaging) must stay **identical** across every asset — drift looks like a different product.
+- Use `nano_banana_2` image-to-image with the product reference (`--image ref`) and state: *"keep the exact product identity / emblem / calligraphy unchanged."*
+- This also powers **re-skins** for variants: *"re-skin into a deep ruby-red body, keeping the SAME emblem and calligraphy."*
+- **Know WHERE the branding lives.** If a name/logo sits on the PACKAGING (e.g. printed on a box's glass panel), do NOT render it onto the product itself — generating a name engraved into the bare product looks fake and will be rejected. Keep the product clean; put the mark where it really is. Confirm placement from the reference (or ask the client) before generating.
+- For a clean nav logo: generate the emblem alone ("ONLY the emblem, flat, on pure black/white") then background-remove.
+
+> Both constraints go into the prompt text every time, and both are verified by **looking at the generated image** before spending video credits on it.
+</file>
+
+<file path="memory/08-preview-and-env-gotchas.md">
+# 08 · Preview & Environment Gotchas
+
+Hard-won quirks that otherwise waste hours. (Windows-flavored, but most apply anywhere.)
+
+## Missing CLI tools — use substitutes
+- No **`jq`** → parse JSON with `grep -oE` (see [06-higgsfield-pipeline](06-higgsfield-pipeline.md), parse `result_url` specifically).
+- No **`ffmpeg`/`ffprobe`** → use **Python + OpenCV** (`cv2`) to read videos, get frame count/fps, extract & resize frames. Guard against `fps==0` / unreadable files (a failed download = a missing or 0-frame mp4).
+
+## Serving the static file for preview
+Serve with `npx -y serve -l <port> .`. Some ports are OS-reserved — use e.g. 8123 with `autoPort:true`. The dev server tool reads a `launch.json` (see `templates/launch.json`).
+
+## The headless preview tab is HIDDEN → rAF is PAUSED
+This is the big one. In a backgrounded preview tab `document.hidden === true`, so `requestAnimationFrame` fires **0×**:
+- **Time-based GSAP tweens never advance** (`gsap.ticker.frame` stays 0): entrance timelines, ambient color tweens, reveals — all frozen. `gsap.set()` (instant) still works.
+- **`preview_screenshot` times out** (the renderer is suspended) — and also hangs when a `<video>` is buffering.
+- **Bulk image preloading stalls** (a 90-frame canvas sequence stops at ~60%).
+> This is the ENVIRONMENT, not a page bug. A real, visible browser runs everything fine. So:
+> - **Trust `eval` over screenshots.** Verify structure, computed styles, no console errors, and force end-states via `gsap.set(...)` to confirm layout.
+> - Verify scroll-driven (scrub) state by **driving Lenis programmatically**: `window.lenis.scrollTo(y, {immediate:true, force:true})` then `ScrollTrigger.update()`. Plain `window.scrollTo` does NOT update ScrollTrigger when Lenis owns scroll. Position by a trigger's pixel range `st.start + p*(st.end - st.start)`, not `offsetTop`.
+> - To screenshot at all, pause/clear any `<video>` first, and accept that entrance/continuous animations won't show.
+
+## `<picture>` 404 pitfall
+If a matched `<source media=...>`'s image 404s, the browser does NOT fall back to `<img src>` — the `<img>` fires `error` and shows nothing. Don't point a `<source>` at an asset that may not exist yet; use a single `<img>` until the responsive crop is actually generated.
+
+## Muted autoplay
+Browsers (and the headless preview) may not autoplay video without a gesture. Call `video.play().catch(()=>{})` on the first `pointerdown/wheel/keydown/touchstart` and on the section's ScrollTrigger `onEnter`; keep a poster as fallback. Use a JS playlist (advance on `ended`/`error`) instead of one looped clip. **Do not set the `loop` attribute if you rely on the `ended` event** — a looping element never fires `ended`, stranding the playlist.
+
+## Graceful asset fallback (CSS)
+`::after` does NOT render on replaced elements (`<img>`). Put the fallback gradient on a **container** (`.fallback-host`), and on `img.onerror` hide the img + add `.is-missing` to the nearest `.fallback-host`. So a missing asset shows a tasteful gradient, never a broken-image box.
+</file>
+
+<file path="memory/09-quality-bar.md">
+# 09 · The Quality Bar & Pitfalls (what gets rejected)
+
+The reference is **TV-commercial / Apple × Cartier / Hermès** dark-or-light luxury — not ordinary web layouts. Hold this bar.
+
+## Standards
+- **Aesthetic:** cinematic lighting, **Smooth Scroll Storytelling**, **Dynamic Product Reveals** that "look like a TV ad, not a website." Everything dramatic and interconnected.
+- The product is the hero of a **continuous, unbroken visual journey** tied to scroll — "the raw material gives birth to the product, the product fills its vessel, in one continuous flow the eye never leaves."
+- **Typography:** clean over calligraphic for luxury. For Arabic: **El Messiri** (headings) + **Tajawal** (body); avoid **Amiri** for big display. High contrast with the background.
+- **Captions over film:** small, high-contrast, **off-center (right in RTL)** so they don't fight the centered subject. The opening centered title is fine; subsequent center text is not.
+- **Nav:** a beautiful header WITH the product logo that **hides on scroll-down, returns on scroll-up** (removing it entirely is wrong).
+- Generate **real assets** (images AND video) via Higgsfield — don't lean on placeholders or reuse rejected assets.
+
+## Auto-rejects — never do these
+- Janky/choppy scroll, frame loss → caused by scrubbing `video.currentTime`. Use a canvas frame sequence ([02](02-scroll-film-canvas.md)).
+- A visible **white/black rectangle** around a product image → `mix-blend-mode` broke under a GSAP transform. Use a transparent cutout ([04](04-cinematic-hero.md), [05](05-theming.md)).
+- A **static image + fade-in** as the hero or any "feature" beat → must be cinematic (entrance + continuous life + pointer depth + pinned reveals). "Just an image and sections with fade-out" is the single most common complaint.
+- Visible cuts/seams between clips; cross-dissolving two different stills (ghosting).
+- Generic text+image grids; big centered display text overlapping the visual; low-contrast text.
+- Filler eyebrows like "A CINEMATIC JOURNEY".
+- An empty intro splash before the product; awkward large empty gaps from over-tall sections.
+- Non-modest people; product identity drift; a brand mark rendered in the wrong place (e.g. on the product when it belongs on the packaging).
+
+## Working method
+- Decide the **theme + story** from the product and its reference photos FIRST, then build.
+- **Verify generated assets by looking at them** (identity, modesty, branding placement, scale) BEFORE animating or spending video credits.
+- When the client's feedback is blunt, treat the harsh wording as **signal** — each rejection usually contains a precise, correct fix. Apply it, don't argue.
+- Keep iterating the top of the page hardest; the first impression carries the whole experience.
+</file>
+
+<file path="templates/HIGGSFIELD-PROMPTS.template.md">
+# Higgsfield Prompt List — TEMPLATE
+
+Fill in `{{PRODUCT}}`, `{{BRAND_MARK}}`, `{{ORIGIN}}`, the palette/edge color, and the story beats.
+Numbered by order of appearance. Types: Text-to-Image (`gpt_image_2`) · Image-to-Image (`nano_banana_2`) · Image-to-Video (`seedance_2_0`) · Background-Remove (`image_background_remover`).
+All assets land in `assets/` with the exact filenames the HTML expects.
+
+## 0 · Setup
+- Save the client reference(s) under ASCII names, e.g. `assets/ref-product.jpg` (and `assets/ref-detail.jpg`).
+- Pre-upload once and reuse the IDs: `higgsfield upload create assets/ref-product.jpg --json` → `--image <id>`.
+
+### Shared spec (paste into every product keyframe)
+- **Edge/background (theme-dependent, keep IDENTICAL across keyframes):**
+  - Light: `Clean seamless warm off-white #FBF8F2 fading to the same paper tone at every edge and corner, soft natural daylight, gentle soft shadow.`
+  - Dark: `Deep espresso near-black #0B0805 fading to pure black at every edge and corner, dramatic single warm raking light.`
+- **Identity:** `Keep the exact {{PRODUCT}} identity and the {{BRAND_MARK}} unchanged.` (And: keep the mark where it really lives — on packaging vs on the product.)
+- **Always:** `editorial luxury, hyper-detailed, no extra text, no watermark.`
+
+---
+
+## A · The transformation film (keyframes P1→P5 + clips V1→V4) — boundary-matched
+> Beat list (edit to your product): raw/plain {{PRODUCT}} → it forms/assembles → the {{BRAND_MARK}} appears → final product → gallery reveal.
+
+- **P1 / K1** — `assets/seq-src/k1.jpg` — i2i, ref, 16:9, 2k — *plain {{PRODUCT}}, hero pose.* + shared spec.
+- **P2 / K2** — `assets/seq-src/k2.jpg` — i2i, 16:9 — *{{PRODUCT}} front-facing, centred.*
+- **P3 / K3** — `assets/seq-src/k3.jpg` — i2i, 16:9 — *the transition state (forming / blank packaging).*
+- **P4 / K4** — `assets/seq-src/k4.jpg` — i2i, 16:9 — *the FINISHED product with the {{BRAND_MARK}} in place.* (Often just the real reference, copied.)
+- **P5 / K5** — `assets/seq-src/k5.jpg` — i2i, 16:9 — *final product on a pedestal in a soft gallery (reveal).*
+- **V1** `assets/v1.mp4` — i2v — `--start-image k1 --end-image k2` — *slow orbit. Locked, slow motion, no cuts, no flicker.*
+- **V2** `assets/v2.mp4` — `--start-image k2 --end-image k3` — *the form/assembly beat.*
+- **V3** `assets/v3.mp4` — `--start-image k3 --end-image k4` — *the {{BRAND_MARK}} materializes (where it really lives).*
+- **V4** `assets/v4.mp4` — `--start-image k4 --end-image k5` — *pull back to the gallery.*
+- All clips: `--aspect_ratio 16:9 --resolution 1080p --duration 5 --bitrate_mode high --generate_audio false`.
+- Then extract → `assets/seq/f000.jpg…` (OpenCV, drop duplicate boundary frames) and set `FRAME_COUNT` in the HTML.
+
+## B · Section stills
+- **P6** — `assets/origin.jpg` — t2i (`gpt_image_2`), 16:9, quality high, 2k — *{{ORIGIN}} environment, no product.*
+- **P7** — `assets/product-hero.jpg` — i2i ref, 4:3/4:5 — *the product hero on the theme ground.* (Or use the real reference.)
+- **P8 (opt)** — `assets/macro.jpg` — i2i ref — *extreme macro detail.*
+- **P9** — `assets/ritual.jpg` — i2i ref, 16:9 — *lifestyle moment.* **If a woman appears: full hijab, conservative long sleeves, only face & hands (mandatory).** Realistic product scale.
+- **P11/P12** — `assets/edition-1.jpg`, `assets/edition-2.jpg` — i2i ref re-skins/variants, keep the {{BRAND_MARK}}.
+
+## C · Hero cutout + nav logo
+- **CUT** — `assets/product-cut.png` — Background-Remove on the cleanest product/hero shot → transparent PNG for the hero (no blend trick).
+- **P13 (opt)** — `assets/logo.png` — i2i "ONLY the {{BRAND_MARK}}, flat, on pure black/white" → Background-Remove → transparent nav logo.
+
+## D · CTA + lifestyle video
+- **V5** — `assets/cta.mp4` — i2v `--start-image k4 --end-image k4` (seamless loop) — *the product rotating slowly.* Poster = `assets/product-hero.jpg`.
+- **V6** — `assets/life1.mp4` — i2v `--start-image ritual.jpg` — *subtle modest lifestyle motion.*
+
+---
+### Run notes
+- `higgsfield generate create <model> ... --image <id> --wait --wait-timeout 25m --json`
+- Parse: `grep -oE '"result_url":[[:space:]]*"[^"]+"' out.json | grep -oE 'https://[^"]+' | head -1` → `curl -fsSL` (3× retry).
+- Retry 502 / input-fetch failures. Generate images in parallel (background); videos in a second pass.
+- **Verify every asset by viewing it** (identity, modesty, mark placement, scale) before making video from it.
+</file>
+
+<file path="templates/index.skeleton.html">
+<!DOCTYPE html>
+<!-- ============================================================================
+     CINEMATIC LUXURY LANDING-PAGE SKELETON  (single file)
+     Fill the {{PLACEHOLDERS}}, drop assets into assets/, set FRAME_COUNT.
+     The engine (Lenis+GSAP ticker, hide/show header, per-section ambient,
+     cinematic hero, canvas frame-sequence film, CTA reveal, fallbacks) is
+     already correct — see ../memory/ for why each piece is built this way.
+     Default theme = LIGHT. To go DARK: swap the palette vars + ambient values,
+     and use mix-blend-mode:screen with black-bg assets (see memory/05-theming).
+     ============================================================================ -->
+<html lang="{{LANG|ar}}" dir="{{DIR|rtl}}">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>{{PRODUCT_NAME}}</title>
+<meta name="description" content="{{META_DESCRIPTION}}" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<!-- Arabic: El Messiri (headings) + Tajawal (body). Swap for your script if not Arabic. -->
+<link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@400;500;600;700&family=Tajawal:wght@200;300;400;500;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
+<style>
+  :root{
+    /* LIGHT palette — derive accents from YOUR product. Gold must be deep to read on light. */
+    --paper:#FBF8F2; --mist:#F7F4EC; --cream:#F3EEE2; --sand:#ECE2CF;
+    --ink:#241812; --ink-soft:#6E5C4B; --ink-faint:#9A8975;
+    --gold:#A97B33; --gold-deep:#8A6128; --gold-bright:#C2974A; --accent:#A8632E;
+    --line:rgba(58,33,20,.16); --line-soft:rgba(58,33,20,.09);
+    --ambient:#FBF8F2; --maxw:1280px; --ease:cubic-bezier(.22,.61,.36,1);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%} html{scroll-behavior:auto}
+  body{background:var(--paper);color:var(--ink);font-family:"Tajawal",system-ui,sans-serif;font-weight:300;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden;line-height:1.8}
+  ::selection{background:var(--gold-bright);color:#fff}
+  h1,h2,h3,.display{font-family:"El Messiri",serif;font-weight:600;line-height:1.1;color:var(--ink)}
+  .latin{font-family:"Cormorant Garamond",serif;letter-spacing:.34em;text-transform:uppercase}
+
+  /* fixed cinematic layers */
+  #ambient{position:fixed;inset:0;z-index:-3;background:var(--ambient)}
+  #glow{position:fixed;inset:0;z-index:-2;pointer-events:none;opacity:.5;
+    background:radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.8),rgba(244,239,229,0) 60%)}
+  #vignette{position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(135% 120% at 50% 42%,transparent 55%,rgba(120,90,50,.06) 100%)}
+  #grain{position:fixed;inset:-50%;z-index:60;pointer-events:none;opacity:.035;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  #progress{position:fixed;top:0;right:0;left:0;height:2px;z-index:70;transform-origin:right;transform:scaleX(0);
+    background:linear-gradient(90deg,var(--gold-deep),var(--gold-bright),var(--accent))}
+
+  /* header */
+  header{position:fixed;top:0;right:0;left:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+    padding:clamp(14px,2.4vw,28px) clamp(18px,4vw,54px);will-change:transform;
+    transition:transform .5s var(--ease),background .5s,backdrop-filter .5s,box-shadow .5s,padding .5s}
+  header.hidden{transform:translateY(-115%)}
+  header.solid{background:rgba(251,248,242,.78);backdrop-filter:blur(12px);box-shadow:0 1px 0 var(--line-soft);
+    padding-top:clamp(10px,1.6vw,16px);padding-bottom:clamp(10px,1.6vw,16px)}
+  .brand{display:flex;align-items:center;gap:12px;text-decoration:none}
+  .brand .wm{font-family:"El Messiri",serif;font-weight:700;font-size:clamp(21px,2.4vw,27px);color:var(--ink)}
+  header nav{display:flex;align-items:center;gap:clamp(16px,2.4vw,36px)}
+  header nav a{color:var(--ink-soft);text-decoration:none;font-size:14px;font-weight:500;transition:color .3s}
+  header nav a:hover{color:var(--gold-deep)}
+  .nav-cta{border:1px solid var(--gold);border-radius:999px;padding:8px 22px;color:var(--gold-deep)!important}
+  .nav-cta:hover{background:var(--gold);color:#fff!important}
+  @media(max-width:680px){header nav a:not(.nav-cta){display:none}}
+  a:focus-visible,.btn:focus-visible,.nav-cta:focus-visible,header nav a:focus-visible,footer .links a:focus-visible{
+    outline:2px solid var(--gold-deep);outline-offset:3px;border-radius:6px}
+
+  /* layout helpers */
+  section{position:relative}
+  .wrap{max-width:var(--maxw);margin-inline:auto;padding-inline:clamp(20px,5vw,68px)}
+  .eyebrow{font-family:"Cormorant Garamond",serif;letter-spacing:.46em;text-transform:uppercase;font-size:13px;color:var(--gold-deep);font-weight:500}
+  .idx{font-family:"El Messiri",serif;font-size:15px;color:var(--gold);font-weight:600}
+  .gold-text{background:linear-gradient(180deg,var(--gold-bright),var(--gold) 50%,var(--gold-deep));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .multiply{mix-blend-mode:multiply}   /* ONLY on non-GSAP-transformed product shots (see memory/05) */
+  .fallback-host{position:relative}
+  .fallback-host.is-missing{background-image:linear-gradient(135deg,var(--cream),var(--sand) 78%);background-size:cover}
+  .reveal{opacity:0;transform:translateY(34px);transition:opacity 1.1s var(--ease),transform 1.1s var(--ease)}
+  .reveal.in{opacity:1;transform:none}
+
+  /* 1 · HERO (cinematic) */
+  #hero{height:135vh}
+  #hero .stage{position:sticky;top:0;height:100svh;overflow:hidden;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;padding:6vh 18px 0;perspective:1300px}
+  #hero .aura{position:absolute;top:44%;left:50%;width:88vmin;height:88vmin;border-radius:50%;z-index:0;pointer-events:none;
+    transform:translate3d(calc(-50% + var(--px,0px)),calc(-50% + var(--py,0px)),0);
+    background:radial-gradient(circle,rgba(226,178,100,.46),rgba(200,132,60,.14) 40%,transparent 66%);
+    filter:blur(16px);opacity:0;will-change:transform,opacity;animation:auraIn 1.6s ease-out .15s forwards,auraPulse 8s ease-in-out 1.8s infinite}
+  @keyframes auraIn{to{opacity:.7}} @keyframes auraPulse{0%,100%{opacity:.6}50%{opacity:.86}}
+  #hero .motes{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+  #hero .motes span{position:absolute;border-radius:50%;opacity:0;will-change:transform,opacity;filter:blur(.4px);
+    background:radial-gradient(circle,rgba(238,208,142,.95),rgba(238,208,142,0) 70%);animation:mote linear infinite}
+  @keyframes mote{0%{opacity:0;transform:translateY(40px) scale(.5)}12%{opacity:.75}55%{opacity:.55}100%{opacity:0;transform:translateY(-120px) scale(1.05)}}
+  #hero .hero-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;will-change:transform,opacity}
+  #hero .latin{font-size:13px;color:var(--gold-deep);margin-bottom:2.6vh;opacity:0}
+  #hero .media-float{animation:floaty 6.5s var(--ease) infinite}
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-15px)}}
+  #hero .media-tilt{position:relative;transform-style:preserve-3d;transform:rotateX(var(--tx,0deg)) rotateY(var(--ty,0deg));transition:transform .3s ease-out}
+  #hero .hero-media{display:block;height:46vh;width:auto;max-width:80vw;object-fit:contain;opacity:0;filter:drop-shadow(0 28px 36px rgba(90,62,28,.32))}
+  #hero .specular{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;opacity:0;
+    -webkit-mask:url(assets/product-cut.png) center/contain no-repeat;mask:url(assets/product-cut.png) center/contain no-repeat;
+    background:linear-gradient(115deg,transparent 40%,rgba(255,251,240,.65) 50%,transparent 60%);background-size:280% 280%;
+    animation:sheen 7.5s ease-in-out 2.2s infinite}
+  @keyframes sheen{0%,16%{background-position:150% 0;opacity:0}24%{opacity:.95}46%,100%{background-position:-50% 0;opacity:0}}
+  #hero h1{font-size:clamp(54px,12.5vw,168px);font-weight:700;line-height:.9;margin-top:2.6vh;opacity:0;clip-path:inset(0 0 100% 0)}
+  #hero .sub{margin-top:1.4vh;font-size:clamp(15px,2vw,21px);color:var(--ink-soft);opacity:0}
+  .scrollcue{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);z-index:3;display:flex;flex-direction:column;align-items:center;gap:8px;
+    color:var(--ink-faint);font-size:11px;letter-spacing:.32em;font-family:"Cormorant Garamond",serif;text-transform:uppercase}
+  .scrollcue .bar{width:1px;height:44px;background:linear-gradient(var(--gold),transparent);animation:cue 2.4s var(--ease) infinite}
+  @keyframes cue{0%{transform:scaleY(.2);opacity:.2;transform-origin:top}50%{transform:scaleY(1);opacity:1}100%{transform:scaleY(.2);opacity:.2;transform-origin:bottom}}
+
+  /* 2 · FILM (canvas frame-sequence) */
+  #film{height:640vh}
+  #film .stage{position:sticky;top:0;height:100svh;overflow:hidden;background:var(--paper)}
+  #film canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  #film .film-fallback{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:none}
+  #film .caps{position:absolute;right:clamp(20px,6vw,98px);bottom:clamp(74px,13vh,140px);z-index:4;width:min(80vw,440px);text-align:right;pointer-events:none}
+  #film .cap{position:absolute;right:0;bottom:0;opacity:0;transform:translateY(14px);font-family:"El Messiri",serif;font-size:clamp(22px,3.6vw,42px);line-height:1.28;color:var(--ink)}
+  #film .loader{position:absolute;left:clamp(18px,5vw,42px);bottom:clamp(24px,5vh,40px);z-index:5;font-family:"Cormorant Garamond",serif;letter-spacing:.28em;font-size:12px;color:var(--ink-faint);transition:opacity .6s}
+
+  /* 3 · REVEAL */
+  #reveal{padding:22vh 0 18vh}
+  #reveal .grid{display:grid;grid-template-columns:1fr;gap:clamp(40px,6vw,84px);align-items:center}
+  @media(min-width:900px){#reveal .grid{grid-template-columns:1.05fr .95fr}}
+  #reveal .shot{position:relative;aspect-ratio:4/3;display:grid;place-items:center}
+  #reveal .shot img{width:100%;height:100%;object-fit:contain}
+  #reveal .copy{text-align:right} #reveal .idx{display:block;margin-bottom:12px}
+  #reveal h2{font-size:clamp(36px,5.6vw,78px);margin:8px 0 22px}
+  #reveal .lead{font-size:clamp(16px,1.8vw,20px);color:var(--ink-soft);max-width:46ch;margin-inline-start:auto}
+  #reveal .specs{list-style:none;margin-top:36px}
+  #reveal .specs li{display:flex;align-items:baseline;justify-content:flex-end;gap:18px;padding:18px 0;border-top:1px solid var(--line)}
+  #reveal .specs li:last-child{border-bottom:1px solid var(--line)}
+  #reveal .specs .k{font-family:"El Messiri",serif;color:var(--gold-deep);font-weight:600;white-space:nowrap}
+  #reveal .specs .v{color:var(--ink-soft)}
+
+  /* 4 · RITUAL / MOMENT */
+  #ritual{padding:20vh 0}
+  #ritual .frame{position:relative;height:clamp(460px,84vh,840px);border-radius:3px;overflow:hidden;box-shadow:0 50px 110px -50px rgba(80,55,25,.45)}
+  #ritual .frame img{position:absolute;inset:-6%;width:112%;height:112%;object-fit:cover;will-change:transform}
+  #ritual .frame::after{content:"";position:absolute;inset:0;background:linear-gradient(to left,rgba(251,248,242,.9),rgba(251,248,242,.25) 52%,transparent 84%),linear-gradient(0deg,rgba(251,248,242,.8),transparent 52%)}
+  #ritual .copy{position:absolute;z-index:2;right:clamp(24px,5vw,72px);bottom:clamp(42px,9vh,96px);max-width:min(88vw,540px);text-align:right}
+  #ritual .idx{display:block;margin-bottom:12px} #ritual h2{font-size:clamp(34px,5.6vw,70px);margin:8px 0 16px}
+  #ritual p{color:var(--ink-soft);font-size:clamp(15px,1.7vw,19px);max-width:44ch;margin-inline-start:auto}
+
+  /* 5 · CTA */
+  #cta{height:260vh}
+  #cta .stage{position:sticky;top:0;height:100svh;overflow:hidden;display:grid;place-items:center;background:var(--paper)}
+  #cta video,#cta .cta-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
+  #cta .cta-poster{transition:opacity .8s ease}
+  #cta .dim{position:absolute;inset:0;opacity:0;backdrop-filter:blur(2px);background:radial-gradient(120% 100% at 50% 50%,rgba(251,248,242,.62),rgba(244,238,226,.9))}
+  #cta .content{position:relative;z-index:3;text-align:center;opacity:0;transform:translateY(28px);padding-inline:20px}
+  #cta .content .latin{display:block;font-size:12px;color:var(--gold-deep);margin-bottom:18px}
+  #cta h2{font-size:clamp(44px,9vw,118px);line-height:.94}
+  #cta .content p{margin:18px auto 0;color:var(--ink-soft);font-size:clamp(15px,1.8vw,20px);max-width:40ch}
+  #cta .btns{margin-top:40px;display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+  .btn{border-radius:999px;padding:15px 40px;font-family:"El Messiri",serif;font-size:17px;font-weight:600;text-decoration:none;display:inline-block;transition:transform .35s var(--ease),box-shadow .35s,background .35s,color .35s}
+  .btn-primary{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:#fff;box-shadow:0 16px 40px -14px rgba(169,123,51,.7)}
+  .btn-primary:hover{transform:translateY(-3px)}
+  .btn-ghost{border:1px solid var(--gold);color:var(--gold-deep)} .btn-ghost:hover{background:var(--gold);color:#fff;transform:translateY(-3px)}
+
+  /* 6 · EDITIONS */
+  #editions{padding:18vh 0 12vh;text-align:center}
+  #editions .head{margin-bottom:clamp(40px,6vw,72px)} #editions .idx{display:block;margin-bottom:10px}
+  #editions h2{font-size:clamp(34px,5.4vw,66px);margin-top:6px}
+  #editions .cards{display:grid;grid-template-columns:1fr;gap:26px}
+  @media(min-width:760px){#editions .cards{grid-template-columns:repeat(3,1fr)}}
+  .ed-card{position:relative;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--mist);transition:transform .5s var(--ease),box-shadow .5s,border-color .5s}
+  .ed-card:hover{transform:translateY(-8px);box-shadow:0 34px 70px -36px rgba(80,55,25,.4)}
+  .ed-card .pic{aspect-ratio:4/3;display:grid;place-items:center;overflow:hidden;padding:8%}
+  .ed-card .pic img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply;transition:transform .9s var(--ease)}
+  .ed-card:hover .pic img{transform:scale(1.05)}
+  .ed-card .body{padding:6px 22px 28px} .ed-card h3{font-size:23px;color:var(--ink)} .ed-card p{font-size:14px;color:var(--ink-soft);margin-top:8px}
+
+  footer{padding:9vh 0 5vh;text-align:center;border-top:1px solid var(--line)}
+  footer .wm{font-family:"El Messiri",serif;font-size:40px;font-weight:700}
+  footer .links{margin:24px 0;display:flex;gap:30px;justify-content:center;flex-wrap:wrap}
+  footer .links a{color:var(--ink-soft);text-decoration:none;font-size:14px;transition:color .3s} footer .links a:hover{color:var(--gold-deep)}
+  footer .cr{color:var(--ink-faint);font-size:12px}
+
+  @media(prefers-reduced-motion:reduce){
+    #hero .aura,#hero .motes span,#hero .specular,#hero .media-float,.scrollcue .bar{animation:none}
+    #hero .aura{opacity:.6} #hero .latin,#hero .hero-media,#hero h1,#hero .sub{opacity:1;clip-path:none}
+    *{scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+<div id="ambient"></div><div id="glow"></div><div id="vignette"></div><div id="grain"></div><div id="progress"></div>
+
+<header id="header">
+  <a class="brand" href="#hero"><span class="wm">{{PRODUCT_NAME}}</span></a>
+  <nav>
+    <a href="#reveal">{{NAV_1}}</a><a href="#ritual">{{NAV_2}}</a><a href="#editions">{{NAV_3}}</a>
+    <a class="nav-cta" href="#cta">{{NAV_CTA}}</a>
+  </nav>
+</header>
+
+<main>
+  <!-- 1 · HERO -->
+  <section id="hero" data-ambient="#FBF8F2" data-glow="0">
+    <div class="stage fallback-host">
+      <div class="aura" aria-hidden="true"></div>
+      <div class="motes" aria-hidden="true">
+        <span style="left:24%;top:64%;width:7px;height:7px;animation-duration:9s;animation-delay:0s"></span>
+        <span style="left:38%;top:72%;width:5px;height:5px;animation-duration:11s;animation-delay:1.4s"></span>
+        <span style="left:52%;top:60%;width:9px;height:9px;animation-duration:13s;animation-delay:3.1s"></span>
+        <span style="left:63%;top:70%;width:4px;height:4px;animation-duration:10s;animation-delay:.7s"></span>
+        <span style="left:71%;top:64%;width:6px;height:6px;animation-duration:12s;animation-delay:2.3s"></span>
+        <span style="left:45%;top:78%;width:5px;height:5px;animation-duration:14s;animation-delay:4.2s"></span>
+        <span style="left:31%;top:55%;width:4px;height:4px;animation-duration:11s;animation-delay:5.5s"></span>
+        <span style="left:58%;top:80%;width:7px;height:7px;animation-duration:9.5s;animation-delay:6.1s"></span>
+      </div>
+      <div class="hero-inner">
+        <span class="latin">{{LATIN_LABEL}}</span>
+        <!-- transparent cutout (background-removed) — NOT a blend trick -->
+        <div class="media-float"><div class="media-tilt">
+          <img class="hero-media" src="assets/product-cut.png" alt="{{PRODUCT_NAME}}" loading="eager" />
+          <span class="specular" aria-hidden="true"></span>
+        </div></div>
+        <h1>{{PRODUCT_NAME}}</h1>
+        <div class="sub">{{TAGLINE}}</div>
+      </div>
+      <div class="scrollcue"><span>{{SCROLL_WORD}}</span><span class="bar"></span></div>
+    </div>
+  </section>
+
+  <!-- 2 · FILM -->
+  <section id="film" data-ambient="#F8F5EF" data-glow=".7">
+    <div class="stage fallback-host">
+      <canvas id="filmCanvas"></canvas>
+      <img class="film-fallback multiply" src="assets/product-hero.jpg" alt="{{PRODUCT_NAME}}" />
+      <div class="caps" id="filmCaps">
+        <div class="cap" data-a="0.02" data-b="0.24">{{FILM_CAP_1}}</div>
+        <div class="cap" data-a="0.30" data-b="0.52">{{FILM_CAP_2}}</div>
+        <div class="cap" data-a="0.58" data-b="0.80">{{FILM_CAP_3}}</div>
+        <div class="cap" data-a="0.86" data-b="0.99">{{FILM_CAP_4}}</div>
+      </div>
+      <div class="loader" id="filmLoader">…</div>
+    </div>
+  </section>
+
+  <!-- 3 · REVEAL -->
+  <section id="reveal" data-ambient="#F4EFE4" data-glow=".55">
+    <div class="wrap"><div class="grid">
+      <div class="shot fallback-host reveal"><img class="multiply" src="assets/product-hero.jpg" alt="{{PRODUCT_NAME}}" loading="lazy" /></div>
+      <div class="copy">
+        <span class="idx reveal">٠١ — {{REVEAL_EYEBROW}}</span>
+        <h2 class="gold-text reveal">{{REVEAL_TITLE}}</h2>
+        <p class="lead reveal">{{REVEAL_LEAD}}</p>
+        <ul class="specs">
+          <li class="reveal"><span class="k">{{SPEC_1_K}}</span><span class="v">{{SPEC_1_V}}</span></li>
+          <li class="reveal"><span class="k">{{SPEC_2_K}}</span><span class="v">{{SPEC_2_V}}</span></li>
+          <li class="reveal"><span class="k">{{SPEC_3_K}}</span><span class="v">{{SPEC_3_V}}</span></li>
+          <li class="reveal"><span class="k">{{SPEC_4_K}}</span><span class="v">{{SPEC_4_V}}</span></li>
+        </ul>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- 4 · RITUAL / MOMENT -->
+  <section id="ritual" data-ambient="#F1E7D5" data-glow=".5">
+    <div class="wrap"><div class="frame fallback-host">
+      <!-- if a person appears: full hijab + conservative (see memory/07) -->
+      <img src="assets/ritual.jpg" alt="{{RITUAL_ALT}}" loading="lazy" />
+      <div class="copy reveal">
+        <span class="idx">٠٢ — {{RITUAL_EYEBROW}}</span>
+        <h2 class="gold-text">{{RITUAL_TITLE}}</h2>
+        <p>{{RITUAL_BODY}}</p>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- 5 · CTA -->
+  <section id="cta" data-ambient="#F6F1E8" data-glow=".5">
+    <div class="stage fallback-host">
+      <img class="cta-poster multiply" id="ctaPoster" src="assets/product-hero.jpg" alt="" aria-hidden="true" />
+      <video id="ctaVideo" muted playsinline preload="none" aria-hidden="true" poster="assets/product-hero.jpg"></video>
+      <div class="dim" id="ctaDim"></div>
+      <div class="content" id="ctaContent">
+        <span class="latin">{{CTA_LABEL}}</span>
+        <h2 class="gold-text">{{CTA_TITLE}}</h2>
+        <p>{{CTA_BODY}}</p>
+        <div class="btns"><a class="btn btn-primary" href="#">{{CTA_PRIMARY}}</a><a class="btn btn-ghost" href="#editions">{{CTA_SECONDARY}}</a></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · EDITIONS -->
+  <section id="editions" data-ambient="#F2ECE0" data-glow=".5">
+    <div class="wrap">
+      <div class="head"><span class="idx reveal">٠٣ — {{EDITIONS_EYEBROW}}</span><h2 class="gold-text reveal">{{EDITIONS_TITLE}}</h2></div>
+      <div class="cards">
+        <article class="ed-card reveal"><div class="pic fallback-host"><img src="assets/product-hero.jpg" alt="{{ED_1_T}}" loading="lazy" /></div><div class="body"><h3>{{ED_1_T}}</h3><p>{{ED_1_D}}</p></div></article>
+        <article class="ed-card reveal"><div class="pic fallback-host"><img src="assets/edition-1.jpg" alt="{{ED_2_T}}" loading="lazy" /></div><div class="body"><h3>{{ED_2_T}}</h3><p>{{ED_2_D}}</p></div></article>
+        <article class="ed-card reveal"><div class="pic fallback-host"><img src="assets/edition-2.jpg" alt="{{ED_3_T}}" loading="lazy" /></div><div class="body"><h3>{{ED_3_T}}</h3><p>{{ED_3_D}}</p></div></article>
+      </div>
+    </div>
+  </section>
+
+  <footer><div class="wrap">
+    <div class="wm gold-text">{{PRODUCT_NAME}}</div>
+    <nav class="links"><a href="#reveal">{{NAV_1}}</a><a href="#ritual">{{NAV_2}}</a><a href="#editions">{{NAV_3}}</a><a href="#cta">{{NAV_CTA}}</a></nav>
+    <div class="cr">{{FOOTER_COPYRIGHT}}</div>
+  </div></footer>
+</main>
+
+<script>
+(function(){
+  "use strict";
+  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const hasGSAP=typeof gsap!=="undefined"&&typeof ScrollTrigger!=="undefined";
+  if(hasGSAP) gsap.registerPlugin(ScrollTrigger);
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const smooth=(e0,e1,x)=>{const t=clamp((x-e0)/(e1-e0),0,1);return t*t*(3-2*t);};
+
+  // graceful asset fallback
+  document.querySelectorAll("img[src]").forEach(img=>img.addEventListener("error",()=>{
+    img.style.display="none"; const h=img.closest(".fallback-host"); if(h) h.classList.add("is-missing");
+  },{once:true}));
+
+  // Lenis driven by GSAP ticker (ONE rAF clock)
+  let lenis=null;
+  if(typeof Lenis!=="undefined"&&hasGSAP&&!reduce){
+    lenis=new Lenis({duration:1.2,easing:t=>Math.min(1,1.001-Math.pow(2,-10*t)),smoothWheel:true});
+    lenis.on("scroll",ScrollTrigger.update);
+    gsap.ticker.add(t=>lenis.raf(t*1000)); gsap.ticker.lagSmoothing(0); window.lenis=lenis;
+    document.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener("click",e=>{
+      const t=document.querySelector(a.getAttribute("href")); if(t){e.preventDefault();lenis.scrollTo(t,{offset:0});}}));
+  }
+
+  // header hide/show + progress
+  const header=document.getElementById("header"), progress=document.getElementById("progress");
+  if(hasGSAP) ScrollTrigger.create({start:0,end:"max",onUpdate:s=>{
+    progress.style.transform="scaleX("+s.progress+")";
+    header.classList.toggle("solid",s.scroll()>40);
+    if(s.scroll()>140) header.classList.toggle("hidden",s.direction===1); else header.classList.remove("hidden");
+  }});
+
+  // ambient per section
+  const ambient=document.getElementById("ambient"), glow=document.getElementById("glow");
+  function applyAmbient(c,g){ if(hasGSAP){gsap.to(ambient,{backgroundColor:c,duration:1.1,overwrite:"auto",ease:"power2.out"});gsap.to(glow,{opacity:g,duration:1.1,overwrite:"auto"});}else{ambient.style.backgroundColor=c;glow.style.opacity=g;} }
+  document.querySelectorAll("section[data-ambient]").forEach(sec=>{
+    const c=sec.getAttribute("data-ambient"),g=parseFloat(sec.getAttribute("data-glow")||".5");
+    if(hasGSAP) ScrollTrigger.create({trigger:sec,start:"top 60%",end:"bottom 40%",onEnter:()=>applyAmbient(c,g),onEnterBack:()=>applyAmbient(c,g)});
+    else if("IntersectionObserver" in window) new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)applyAmbient(c,g);}),{threshold:.4}).observe(sec);
+  });
+
+  // reveals
+  const reveals=document.querySelectorAll(".reveal");
+  if(hasGSAP&&!reduce) reveals.forEach(el=>ScrollTrigger.create({trigger:el,start:"top 86%",once:true,onEnter:()=>el.classList.add("in")}));
+  else if("IntersectionObserver" in window){const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target);}}),{threshold:.2});reveals.forEach(el=>io.observe(el));}
+  else reveals.forEach(el=>el.classList.add("in"));
+
+  // HERO entrance + 3D pointer parallax + scroll handoff
+  if(hasGSAP&&!reduce){
+    gsap.timeline({defaults:{ease:"power3.out"}})
+      .fromTo("#hero .hero-media",{opacity:0,scale:.82,y:60,rotateZ:-5},{opacity:1,scale:1,y:0,rotateZ:0,duration:1.5},0.15)
+      .fromTo("#hero .latin",{opacity:0,y:14},{opacity:1,y:0,duration:.8},0.55)
+      .fromTo("#hero h1",{opacity:0,y:24,clipPath:"inset(0 0 100% 0)"},{opacity:1,y:0,clipPath:"inset(0 0 0% 0)",duration:1.1},0.7)
+      .fromTo("#hero .sub",{opacity:0,y:12},{opacity:1,y:0,duration:.8},1.05)
+      .fromTo("#hero .scrollcue",{opacity:0},{opacity:1,duration:.8},1.3);
+    gsap.to("#hero .hero-inner",{scrollTrigger:{trigger:"#hero",start:"top top",end:"78% top",scrub:true},y:-50,opacity:0,ease:"none"});
+    gsap.to("#hero .aura",{scrollTrigger:{trigger:"#hero",start:"top top",end:"bottom top",scrub:true},scale:1.5,opacity:0,ease:"none"});
+    const stage=document.querySelector("#hero .stage"),tilt=document.querySelector("#hero .media-tilt"),aura=document.querySelector("#hero .aura"),motes=document.querySelector("#hero .motes");
+    stage.addEventListener("pointermove",e=>{const r=stage.getBoundingClientRect(),nx=(e.clientX-r.left)/r.width-.5,ny=(e.clientY-r.top)/r.height-.5;
+      tilt.style.setProperty("--ty",(nx*12).toFixed(2)+"deg");tilt.style.setProperty("--tx",(-ny*9).toFixed(2)+"deg");
+      aura.style.setProperty("--px",(-nx*46).toFixed(1)+"px");aura.style.setProperty("--py",(-ny*34).toFixed(1)+"px");
+      motes.style.transform="translate3d("+(nx*22).toFixed(1)+"px,"+(ny*16).toFixed(1)+"px,0)";});
+    stage.addEventListener("pointerleave",()=>{tilt.style.setProperty("--ty","0deg");tilt.style.setProperty("--tx","0deg");aura.style.setProperty("--px","0px");aura.style.setProperty("--py","0px");motes.style.transform="translate3d(0,0,0)";});
+  }
+  if(!hasGSAP) document.querySelectorAll("#hero .latin,#hero .hero-media,#hero h1,#hero .sub,#hero .scrollcue,#hero .aura").forEach(e=>{e.style.opacity=e.classList.contains("aura")?.6:1;e.style.clipPath="none";e.style.transform="none";});
+
+  // RITUAL + REVEAL parallax
+  if(hasGSAP&&!reduce){
+    gsap.to("#ritual .frame img",{scrollTrigger:{trigger:"#ritual",start:"top bottom",end:"bottom top",scrub:true},y:"-7%",ease:"none"});
+  }
+
+  // FILM — canvas frame sequence (NEVER video.currentTime). Set FRAME_COUNT to your real count.
+  (function initFilm(){
+    const FRAME_COUNT={{FRAME_COUNT|93}};
+    const url=i=>"assets/seq/f"+String(i).padStart(3,"0")+".jpg";
+    const canvas=document.getElementById("filmCanvas"),stage=canvas.closest(".stage"),fallback=document.querySelector("#film .film-fallback"),loaderEl=document.getElementById("filmLoader"),caps=Array.from(document.querySelectorAll("#filmCaps .cap")),ctx=canvas.getContext("2d",{alpha:false}),frames=new Array(FRAME_COUNT);
+    let loaded=0,errored=0,ready=false,useFallback=false,cur=-1,lastIdx=0,filmST=null;
+    const progIdx=()=>filmST?Math.round(clamp(filmST.progress,0,1)*(FRAME_COUNT-1)):0;
+    function showFallback(){useFallback=true;ready=true;canvas.style.display="none";if(fallback&&fallback.complete&&fallback.naturalWidth>0)fallback.style.display="block";else if(fallback)fallback.style.display="none";if(loaderEl)loaderEl.style.opacity=0;}
+    function maybeReady(){if(ready)return;if(loaded+errored>=FRAME_COUNT||loaded>=Math.ceil(FRAME_COUNT*0.6)){if(loaded===0){showFallback();return;}ready=true;if(loaderEl)loaderEl.style.opacity=0;resize();draw(progIdx());}if(loaderEl&&!ready)loaderEl.textContent="… "+Math.round(loaded/FRAME_COUNT*100)+"%";}
+    if(reduce||!hasGSAP){showFallback();return;}
+    for(let i=0;i<FRAME_COUNT;i++){const im=new Image();im.decoding="async";im.onload=()=>{frames[i]=im;loaded++;maybeReady();};im.onerror=()=>{errored++;maybeReady();};im.src=url(i);}
+    setTimeout(()=>{if(!ready){if(loaded>0){ready=true;if(loaderEl)loaderEl.style.opacity=0;resize();draw(progIdx());}else showFallback();}},9000);
+    function resize(){const dpr=Math.min(2,window.devicePixelRatio||1),w=stage.clientWidth,h=stage.clientHeight;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);canvas.style.width=w+"px";canvas.style.height=h+"px";cur=-1;if(ready&&!useFallback)draw(lastIdx);}
+    function draw(i){if(useFallback)return;i=clamp(i,0,FRAME_COUNT-1);let im=frames[i];if(!im){for(let d=1;d<FRAME_COUNT;d++){if(frames[i-d]){im=frames[i-d];break;}if(frames[i+d]){im=frames[i+d];break;}}if(!im)return;}if(i===cur)return;cur=i;lastIdx=i;const cw=canvas.width,ch=canvas.height,iw=im.naturalWidth,ih=im.naturalHeight,s=Math.max(cw/iw,ch/ih),dw=iw*s,dh=ih*s;ctx.fillStyle="#FBF8F2";ctx.fillRect(0,0,cw,ch);ctx.drawImage(im,(cw-dw)/2,(ch-dh)/2,dw,dh);}
+    window.addEventListener("resize",resize,{passive:true});
+    filmST=ScrollTrigger.create({trigger:"#film",start:"top top",end:"bottom bottom",scrub:true,onUpdate:self=>{const p=self.progress;if(ready&&!useFallback)draw(Math.round(p*(FRAME_COUNT-1)));for(const c of caps){const a=parseFloat(c.dataset.a),b=parseFloat(c.dataset.b),mid=(a+b)/2,o=Math.min(smooth(a,a+(mid-a)*0.6,p),1-smooth(mid+(b-mid)*0.4,b,p));c.style.opacity=Math.max(0,o);c.style.transform="translateY("+(12*(1-Math.max(0,o)))+"px)";}}});
+  })();
+
+  // CTA — video alone first, then dim/wash + content reveal. (No `loop` attr → `ended` advances the playlist.)
+  (function initCTA(){
+    const sec=document.getElementById("cta"),video=document.getElementById("ctaVideo"),poster=document.getElementById("ctaPoster"),dim=document.getElementById("ctaDim"),content=document.getElementById("ctaContent");
+    const playlist=["assets/cta.mp4","assets/life1.mp4"]; let pi=0,attempts=0;
+    function load(i){pi=((i%playlist.length)+playlist.length)%playlist.length;video.src=playlist[pi];const pr=video.play();if(pr&&pr.catch)pr.catch(()=>{});}
+    video.addEventListener("loadeddata",()=>{attempts=0;poster.style.opacity=0;});
+    video.addEventListener("ended",()=>load(pi+1));
+    video.addEventListener("error",()=>{if(++attempts<playlist.length)load(pi+1);});
+    let started=false; const start=()=>{if(started)return;started=true;load(0);};
+    ["pointerdown","keydown","wheel","touchstart"].forEach(ev=>window.addEventListener(ev,start,{once:true,passive:true}));
+    if(hasGSAP&&!reduce){
+      ScrollTrigger.create({trigger:sec,start:"top center",onEnter:start,onEnterBack:start});
+      ScrollTrigger.create({trigger:sec,start:"top top",end:"bottom bottom",scrub:true,onUpdate:s=>{const p=s.progress;dim.style.opacity=smooth(0.34,0.66,p);content.style.opacity=smooth(0.40,0.72,p);content.style.transform="translateY("+(28*(1-smooth(0.40,0.72,p)))+"px)";}});
+    } else {dim.style.opacity=.94;content.style.opacity=1;content.style.transform="none";}
+  })();
+
+  if(hasGSAP){window.addEventListener("load",()=>ScrollTrigger.refresh());if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>ScrollTrigger.refresh());}
+})();
+</script>
+</body>
+</html>
+</file>
+
+<file path="templates/launch.json">
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "site",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["-y", "serve", "-l", "8123", "."],
+      "port": 8123,
+      "autoPort": true
+    }
+  ]
+}
+</file>
+
+<file path="CLAUDE.md">
+# CLAUDE.md — Cinematic Luxury Landing-Page Engine
+
+You are a creative director + senior front-end engineer building **single-file, scroll-driven cinematic product landing pages** that feel like a luxury TV ad (Apple × Cartier / Hermès), for ANY product or topic. Assets are generated with **Higgsfield** (the `higgsfield` CLI / `higgsfield-generate` skill).
+
+**Read the detailed playbook in `memory/` before building. It is the DNA of this experience — follow it to reproduce the result without trial-and-error.**
+
+## The DNA (memory/ — read these)
+- `memory/01-build-playbook.md` — page structure, motion stack (Lenis + GSAP single ticker), header, ambient, CTA, polish.
+- `memory/02-scroll-film-canvas.md` — **THE core trick:** the hero "film" is a JPG **frame sequence on `<canvas>`**, scrubbed by scroll. NEVER scrub `video.currentTime`.
+- `memory/03-seamless-transitions.md` — boundary-matched clips; never cross-dissolve stills.
+- `memory/04-cinematic-hero.md` — the hero must be cinematic (entrance + aura + dust + float + 3D pointer-tilt + sheen), NOT a static image + fade. Use a transparent cutout.
+- `memory/05-theming.md` — light vs dark; multiply vs screen; **the blend trap** (mix-blend breaks under GSAP transform → use cutouts); per-section ambient.
+- `memory/06-higgsfield-pipeline.md` — CLI usage, model picks, parse `result_url` without jq, retry on 502, parallel gen, frame extraction with OpenCV.
+- `memory/07-modesty-and-identity.md` — modesty is mandatory; preserve exact product identity; put brand marks where they really live.
+- `memory/08-preview-and-env-gotchas.md` — hidden preview tab pauses rAF (verify via eval, not screenshots); `<picture>` 404; no jq/ffmpeg; muted autoplay; graceful fallbacks.
+- `memory/09-quality-bar.md` — the taste bar and the exact auto-rejects.
+
+## Non-negotiables (the short version)
+1. **Smooth scroll storytelling.** Lenis driven by GSAP's ticker (one rAF). All motion scroll-triggered, slow, contemplative.
+2. **The film = canvas frame sequence.** Never `video.currentTime` scrubbing (it stutters → rejected).
+3. **Seamless.** Transformations are real boundary-matched video clips (clip N end-image == clip N+1 start-image); never ghost two stills together; unify edge/background color across all keyframes.
+4. **Cinematic hero**, not a static image + fade. Transparent cutout (no blend trick on animated elements).
+5. **Ambient mood shifts per section** via a tweened `#ambient` layer.
+6. **Header** hides on scroll-down, returns on scroll-up (never removed).
+7. **CTA:** product video alone first → scroll reveals a dim/wash + order content.
+8. **Typography:** clean, high-contrast. Arabic = El Messiri (headings) + Tajawal (body), never Amiri. Captions off-center (right in RTL).
+9. **Modesty** for any people (full hijab, conservative); **exact product identity** across all assets.
+10. **Graceful fallbacks** (`prefers-reduced-motion` + missing-asset gradient) and a fast, fully responsive page that starts directly on the product.
+
+## Build order
+1. **Analyze the product + its reference photos.** Decide theme (light/dark), story (the transformation), palette (from the product), and copy.
+2. **Scaffold the page** from `templates/index.skeleton.html` (the engine is already correct) — wire your sections, copy, palette, and asset paths.
+3. **Write the Higgsfield prompt list** from `templates/HIGGSFIELD-PROMPTS.template.md` (numbered, boundary-matched, identity + modesty clauses).
+4. **Generate assets** (see `memory/06`): references → image keyframes → boundary-matched clips → extract frame sequence → cutout for the hero. Verify each by looking at it.
+5. **Verify in preview via `eval`** (the tab is hidden → screenshots/animations won't show; check structure, computed styles, console errors, and force end-states). Web-optimize heavy assets.
+6. **Hold the quality bar** (`memory/09`). Iterate the hero hardest.
+
+> Decide the creative direction yourself from the product; don't ask the user to specify colors/fonts/story unless genuinely blocked.
+</file>
+
+<file path="README.md">
+<div dir="rtl">
+
+# 🎬 حزمة صفحات الهبوط السينمائية · cinematic-landing-kit
+
+حزمة **ذاكرة وسياق** جاهزة تجعل **Claude Code** يُنتج صفحة هبوط فاخرة، سينمائية، مبنية على السكرول (بروح Apple × Cartier / Hermès) **لأي منتج أو موضوع** — بلا محاولات فاشلة وبلا أخطاء برمجية. وتُولَّد كل الأصول البصرية عبر **Higgsfield**.
+
+> البرومبت القويّ وحده لا يكفي لضبط سياق مشروع معقّد؛ فالذكاء الاصطناعي قد ينسى أو يهلوس إذا كثُرت الأوامر.
+> لذلك هذه الهدية ليست نصوصًا تنسخها، بل **ملفات الذاكرة** التي تحمل **الحمض النووي** للتجربة كاملة.
+> ضعها في مجلد مشروعك، فيقرأها Claude Code تلقائيًا ويفهم **المعمارية والقوانين وطريقة ربط Higgsfield** مسبقًا — توفيرٌ لآلاف التوكنز، ونتائج سينمائية فورية.
+
+---
+
+## 🧬 لماذا "ذاكرة" وليست برومبت؟
+
+كل القرارات الصعبة والدروس المؤلمة من بناءٍ إنتاجيٍّ حقيقي مكتوبةٌ هنا كقواعد دائمة:
+كيف تُبنى المعمارية، ما الذي يُرفَض فورًا، وكيف يُربَط Higgsfield بدقّة. حين يقرأها Claude Code، لا يبدأ من الصفر ولا يكرّر أخطاءً اكتشفناها سلفًا — بل ينطلق مباشرةً نحو النتيجة الصحيحة.
+
+---
+
+## 📂 ما الذي بالداخل
+
+```
+cinematic-landing-kit/
+├── CLAUDE.md                         ← يقرأه Claude Code تلقائيًا (الخلاصة + قائمة التحقق)
+├── memory/                           ← الحمض النووي مفصّلًا (٩ ملفات مرجعية)
+│   ├── 01-build-playbook.md              الهيكل + محرّك الحركة (Lenis+GSAP) + الهيدر + الـAmbient + الـCTA
+│   ├── 02-scroll-film-canvas.md          الحيلة الأساسية: فيلم كتسلسل إطارات على Canvas (لا video.currentTime)
+│   ├── 03-seamless-transitions.md        مقاطع متطابقة الحدود بلا قطع، ولا تذويب صورتين ثابتتين
+│   ├── 04-cinematic-hero.md              البطل حيّ (دخول + هالة + ذرّات + إمالة 3D + لمعان)، لا صورة + Fade
+│   ├── 05-theming.md                     فاتح/داكن، multiply/screen، وفخّ الـBlend تحت تحويلات GSAP
+│   ├── 06-higgsfield-pipeline.md         أوامر CLI، النماذج، قراءة result_url بلا jq، إعادة المحاولة، استخراج الإطارات
+│   ├── 07-modesty-and-identity.md        الاحتشام إلزامي + ثبات هوية المنتج + مكان العلامة الصحيح
+│   ├── 08-preview-and-env-gotchas.md     توقّف rAF في التبويب المخفي، التحقق عبر eval، لا jq/ffmpeg، فخّ ‎<picture>‎
+│   └── 09-quality-bar.md                 معيار الذوق + قائمة الرفض التلقائي
+└── templates/
+    ├── index.skeleton.html           ← المحرّك كاملًا وشغّالًا، تملأ ‎{{PLACEHOLDERS}}‎ فقط
+    ├── HIGGSFIELD-PROMPTS.template.md ← قالب برومبتات مرقّم بحدود متطابقة وبنود الهوية والاحتشام
+    └── launch.json                   ← إعداد خادم المعاينة الثابت
+```
+
+---
+
+## 🚀 كيفية الاستخدام
+
+**١. انسخ محتويات هذه الحزمة إلى جذر مشروعك:**
+ضع `CLAUDE.md` و`memory/` و`templates/` بجانب كود مشروعك. سيقرأ Claude Code ملف `CLAUDE.md` تلقائيًا في بداية الجلسة، ويُحيلك منه إلى `memory/` لكل التفاصيل.
+
+**٢. افتح Claude Code في المجلد، وأعطِه منتجك:**
+
+> «ابنِ صفحة هبوط سينمائية فاخرة للمنتج التالي: ‹اسمك ووصفه›. هذه صورته المرجعية ‹أرفِق الصورة أو ضعها في `assets/`›. حلّل المنتج، قرّر الهوية والقصّة، ثم نفّذ حسب `CLAUDE.md`.»
+
+**٣. سيتبع Claude المسار تلقائيًا:**
+- يحلّل المنتج وصورته، ويقرّر الثيم (فاتح/داكن) والقصّة والألوان والنصوص.
+- يبني الصفحة من `templates/index.skeleton.html` (المحرّك جاهزٌ وصحيح).
+- يكتب قائمة Higgsfield من القالب، ويولّد الأصول: مراجع ← إطارات مفتاحية ← مقاطع متطابقة الحدود ← تسلسل إطارات + قصاصة شفّافة للبطل، **ويتحقّق من كل أصلٍ بصريًا**.
+- يتحقّق عبر المعاينة، ثم يحسّن الأصول للويب.
+
+**٤. عاينها في متصفّحٍ مرئيّ** (Chrome/Edge)، لا في تبويبٍ مخفيّ — التبويب المخفي يوقف الأنيميشن (التفاصيل في `memory/08`).
+
+---
+
+## ✅ المتطلبات
+
+- **Claude Code** (يقرأ `CLAUDE.md` تلقائيًا).
+- **Higgsfield** متّصلًا (عبر الـ MCP أو الـ CLI / مهارة `higgsfield-generate`) ومُسجَّل الدخول.
+- **Node.js** لمعاينة الملف الثابت (`npx serve`).
+- **Python + OpenCV** (`cv2`) لاستخراج إطارات الفيلم (بديلًا عن ffmpeg).
+
+---
+
+## ⭐ القوانين الذهبية (لا تتنازل عنها)
+
+1. الفيلم = **تسلسل إطارات يُرسَم على Canvas**؛ لا تُمرّر `video.currentTime` أبدًا (يسبّب تقطّعًا).
+2. البطل **سينمائيٌّ حيّ** (دخول + هالة + ذرّات + إمالة ثلاثية الأبعاد + لمعان)، لا صورة ثابتة + Fade.
+3. استخدم **قصاصة شفّافة** للعناصر المتحرّكة — فخاصية `mix-blend-mode` تنكسر تحت أيّ `transform` من GSAP.
+4. تحوّلات **بلا قطع**: مقاطع متطابقة الحدود (نهاية مقطع = بداية التالي)، ولا تذوّب صورتين ثابتتين.
+5. **خلفية محيطة تتغيّر تدريجيًا** لكل قسم، وهيدر يختفي عند النزول ويعود عند الصعود.
+6. **الاحتشام إلزامي** لأي شخص يظهر، و**هوية المنتج ثابتة** عبر كل الأصول.
+7. تايبوغرافي نظيف (للعربية: El Messiri للعناوين + Tajawal للنص، وتجنّب Amiri)، وبدائل لطيفة عند فقد أيّ أصل.
+
+> الشرح الكامل وأسباب كل قرار في مجلد `memory/`. ابدأ دائمًا من `CLAUDE.md`.
+
+---
+
+*مبنيّةٌ من تجربة إنتاجٍ حقيقية. أعد استخدامها بحرّية.*
+
+</div>
+</file>
+
+</files>

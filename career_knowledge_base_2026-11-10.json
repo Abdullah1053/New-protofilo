@@ -1,0 +1,170 @@
+[
+  {
+    "id": "cb_exp_0_0",
+    "category": "experience",
+    "contextLabel": "Doing Platform (Mar 2023 - Present)",
+    "bulletText": "Configured and managed AWS cloud environments (EC2, RDS MySQL, S3), ensuring 99.9% uptime, scalability, and automated data backups.",
+    "isActiveForAi": true,
+    "createdAt": "2026-11-10T08:41:18.444Z"
+  },
+  {
+    "id": "cb_exp_0_1",
+    "category": "experience",
+    "contextLabel": "Doing Platform (Mar 2023 - Present)",
+    "bulletText": "Developed dynamic, responsive user interfaces using ReactJS, integrating RESTful backend endpoints to optimize state management and client-side performance.",
+    "isActiveForAi": true,
+    "createdAt": "2026-11-10T08:41:17.444Z"
+  },
+  {
+    "id": "cb_exp_0_2",
+    "category": "experience",
+    "contextLabel": "Doing Platform (Mar 2023 - Present)",
+    "bulletText": "Secured backend services and APIs using token-based authentication (OAuth, Laravel Sanctum) and implemented role-based access control with AWS IAM.",
+    "isActiveForAi": true,
+    "createdAt": "2026-11-10T08:41:16.444Z"
+  },
+  {
+    "id": "cb_exp_0_3",
+    "category": "experience",
+    "contextLabel": "Doing Platform (Mar 2023 - Present)",
+    "bulletText": "Delivered and maintained 10+ production web and mobile applications, supporting multiple interconnected systems by contributing across backend, frontend, API, database, and mobile development.",
+    "isActiveForAi": true,
+    "createdAt": "2026-11-10T08:41:15.444Z"
+  },
+  {
+    "id": "cb_exp_0_4",
+    "category": "experience",
+    "contextLabel": "Doing Platform (Mar 2023 - Present)",
+    "bulletText": "Improved production system reliability and operational efficiency by optimizing database operations, resolving critical production issues, and strengthening deployment, monitoring, and maintenance workflows.",
+    "isActiveForAi": true,
+    "createdAt": "2026-11-10T08:41:14.444Z"
+  },
+  {
+    "id": "cb_exp_0_5",
+    "category": "experience",
+    "contextLabel": "Doing Platform (Mar 2023 - Present)",
+    "bulletText": "Accelerated end-to-end product delivery across web and mobile platforms by implementing reusable APIs, third-party integrations, automated workflows, and streamlined release processes for Android and iOS applications.",
+    "isActiveForAi": true,
+    "createdAt": "2026-11-10T08:41:13.444Z"
+  },
+  {
+    "id": "cb_proj_0_0",
+    "category": "project",
+    "contextLabel": "Doing Scalable E-Commerce Platform",
+    "bulletText": "Optimized MySQL/PostgreSQL queries, schema indexing, and caching with Redis to achieve sub-80ms search latency.",
+    "isActiveForAi": true,
+    "createdAt": "2026-11-10T08:41:12.444Z"
+  },
+  {
+    "id": "cb_proj_0_1",
+    "category": "project",
+    "contextLabel": "Doing Scalable E-Commerce Platform",
+    "bulletText": "Designed and implemented scalable APIs and backend services using modern TypeScript, Node.js, and ReactJS/Next.js.",
+    "isActiveForAi": true,
+    "createdAt": "2026-11-10T08:41:11.444Z"
+  },
+  {
+    "id": "cb_proj_0_2",
+    "category": "project",
+    "contextLabel": "Doing Scalable E-Commerce Platform",
+    "bulletText": "Improved development and deployment workflows using containerization, process management, and AWS cloud deployment tools.",
+    "isActiveForAi": true,
+    "createdAt": "2026-11-10T08:41:10.444Z"
+  },
+  {
+    "id": "cb_proj_0_3",
+    "category": "project",
+    "contextLabel": "Doing Scalable E-Commerce Platform",
+    "bulletText": "Participated in code reviews, Git-based collaboration, feature development, debugging, and production support.",
+    "isActiveForAi": true,
+    "createdAt": "2026-11-10T08:41:09.444Z"
+  },
+  {
+    "id": "cb_proj_1_0",
+    "category": "project",
+    "contextLabel": "Yalla Fast Platform",
+    "bulletText": "Built robust backend logic and webhooks using PHP Laravel, deploying media assets directly to AWS S3 and managing database instances via AWS RDS.",
+    "isActiveForAi": true,
+    "createdAt": "2026-11-10T08:41:08.444Z"
+  },
+  {
+    "id": "cb_proj_1_1",
+    "category": "project",
+    "contextLabel": "Yalla Fast Platform",
+    "bulletText": "Worked with REST APIs and third-party integrations to connect mobile and web applications with backend services.",
+    "isActiveForAi": true,
+    "createdAt": "2026-11-10T08:41:07.444Z"
+  },
+  {
+    "id": "cb_proj_1_2",
+    "category": "project",
+    "contextLabel": "Yalla Fast Platform",
+    "bulletText": "Supported application deployment, troubleshooting, maintenance, and production releases across web and mobile platforms.",
+    "isActiveForAi": true,
+    "createdAt": "2026-11-10T08:41:06.444Z"
+  },
+  {
+    "id": "cb_proj_1_3",
+    "category": "project",
+    "contextLabel": "Yalla Fast Platform",
+    "bulletText": "Managed and supported mobile application releases and publishing workflows for Google Play Store and Apple App Store.",
+    "isActiveForAi": true,
+    "createdAt": "2026-11-10T08:41:05.444Z"
+  },
+  {
+    "id": "cb_skill_0",
+    "category": "skill_tech",
+    "contextLabel": "Languages",
+    "bulletText": "Languages: PHP, TypeScript, JavaScript (ES6+), SQL, Dart, C++, HTML5/CSS3.",
+    "isActiveForAi": true,
+    "createdAt": "2026-11-10T08:41:04.444Z"
+  },
+  {
+    "id": "cb_skill_1",
+    "category": "skill_tech",
+    "contextLabel": "Frameworks & Libraries",
+    "bulletText": "Frameworks & Libraries: Laravel, ReactJS, Next.js, Node.js, Express, TailwindCSS.",
+    "isActiveForAi": true,
+    "createdAt": "2026-11-10T08:41:03.444Z"
+  },
+  {
+    "id": "cb_skill_2",
+    "category": "skill_tech",
+    "contextLabel": "Databases & Caching",
+    "bulletText": "Databases & Caching: MySQL, MongoDB, PostgreSQL, Redis, Query Optimization.",
+    "isActiveForAi": true,
+    "createdAt": "2026-11-10T08:41:02.444Z"
+  },
+  {
+    "id": "cb_skill_3",
+    "category": "skill_tech",
+    "contextLabel": "DevOps & Cloud",
+    "bulletText": "DevOps & Cloud: AWS (EC2, S3, RDS, IAM), Docker, CI/CD Pipelines, Linux Server Administration, Nginx, Caddy, PM2.",
+    "isActiveForAi": true,
+    "createdAt": "2026-11-10T08:41:01.444Z"
+  },
+  {
+    "id": "cb_skill_4",
+    "category": "skill_tech",
+    "contextLabel": "Architecture & Concepts",
+    "bulletText": "Architecture & Concepts: OAuth, Token-based Authentication (Sanctum/JWT), SSL/TLS, AWS IAM, RESTful APIs, Webhook Architectures, Real-Time Systems, Microservices, System Architecture, Agile / Scrum, Git Workflow.",
+    "isActiveForAi": true,
+    "createdAt": "2026-11-10T08:41:00.444Z"
+  },
+  {
+    "id": "cb_edu_0",
+    "category": "education_cert",
+    "contextLabel": "University of Science and Technology / Faculty of Computer Science",
+    "bulletText": "Bachelor's Degree in Computer Science in Computer Science & Software Engineering (Jan 2018 - Jan 2022) — Grade: Very Good.",
+    "isActiveForAi": true,
+    "createdAt": "2026-11-10T08:40:59.444Z"
+  },
+  {
+    "id": "cb_cert_0",
+    "category": "education_cert",
+    "contextLabel": "Professional Certification",
+    "bulletText": "Full-Stack Web Development & System Architecture (Professional Certification, 2023).",
+    "isActiveForAi": true,
+    "createdAt": "2026-11-10T08:40:58.444Z"
+  }
+]
