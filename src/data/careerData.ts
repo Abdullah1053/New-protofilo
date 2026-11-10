@@ -93,7 +93,7 @@ export const careerData: CareerKnowledgeBase = {
     githubUsername: "Abdullah1053",
     linkedinUrl: "https://linkedin.com/in/abdullah-ademi-788767257",
     resumeUrl:
-      "https://drive.google.com/file/d/1XnoBuRhbLahyD9ICzNYvONwJczwJ4UYB/view?usp=drivesdk",
+      "https://drive.google.com/file/d/15K5aMWlpf0EJ2g3wjfjmWt19D5zyISLM/view?usp=drive_link",
     summary:
       "Full-Stack Software Engineer & Cloud Systems Architect delivering high-availability AWS infrastructure, sub-80ms indexed search pipelines, OAuth/Sanctum security layers, and 10+ interconnected production web and mobile platforms.",
   },
